@@ -17,9 +17,6 @@
       .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 20px; }
       .feature-item { display: flex; gap: 12px; padding: 16px; border-radius: 16px; background: rgba(96, 165, 250, 0.06); border: 1px solid rgba(96, 165, 250, 0.14); color: var(--text-muted); line-height: 1.55; }
       .feature-item i { color: var(--blue-light); width: 19px; height: 19px; flex: 0 0 auto; margin-top: 2px; }
-      .canva-placeholder { min-height: 320px; display: grid; place-items: center; text-align: center; padding: 34px; border: 1px dashed rgba(96, 165, 250, 0.35); border-radius: 14px; background: linear-gradient(135deg, rgba(96,165,250,.09), rgba(15,23,42,.32)); }
-      .canva-placeholder i { width: 44px; height: 44px; color: var(--blue-light); margin-bottom: 12px; }
-      .canva-placeholder p { max-width: 600px; color: var(--text-muted); line-height: 1.6; }
       @media (max-width: 700px) {
         .demo-container { height: 720px !important; min-height: 720px !important; }
         .project-actions .btn-contact { width: 100%; }
@@ -53,7 +50,6 @@
         </div>
         <div class="project-actions">
           <a href="https://github.com/cari17ribeiro/fintrack" target="_blank" rel="noopener" class="btn-contact"><i data-lucide="github"></i> Ver repositório</a>
-          <a href="#canva-doc" class="btn-contact outline"><i data-lucide="presentation"></i> Documentação Canva</a>
         </div>
       </div>
 
@@ -106,20 +102,6 @@
           <div class="feature-item"><i data-lucide="copy-check"></i><span>Detecção de lançamentos duplicados por assinatura SHA-256.</span></div>
           <div class="feature-item"><i data-lucide="sliders-horizontal"></i><span>Configuração de saldo inicial e calibragem pelo saldo informado no extrato.</span></div>
           <div class="feature-item"><i data-lucide="bar-chart-3"></i><span>Filtros por período e tipo, tabela de lançamentos e gráfico por categoria.</span></div>
-        </div>
-      </div>
-
-      <div id="canva-doc" class="content-section reveal" style="margin-top: 80px;">
-        <h2><i data-lucide="presentation"></i> Documentação Canva</h2>
-        <p style="color: var(--text-muted); margin-bottom: 20px;">Espaço reservado para incorporar a documentação visual do FinTrack no Canva quando o link de embed estiver disponível.</p>
-        <div class="glass-panel" style="padding: 20px;">
-          <div class="canva-placeholder">
-            <div>
-              <i data-lucide="panel-top-open"></i>
-              <p>Substitua este bloco por um iframe do Canva usando o formato <strong>https://www.canva.com/design/SEU_ID/view?embed</strong>.</p>
-              <p style="margin-top: 10px; color: var(--blue-light);">A estrutura já está pronta para receber apresentação, documentação técnica ou estudo de caso.</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

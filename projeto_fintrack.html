@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projeto: FinTrack | Carina da Silva Ribeiro</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+      .project-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-top: 24px; }
+      .project-actions .btn-contact { min-width: 190px; justify-content: center; }
+      .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-top: 22px; }
+      .info-card { padding: 22px; border-radius: 18px; background: rgba(15, 23, 42, 0.38); border: 1px solid rgba(96, 165, 250, 0.13); }
+      .info-card h3 { display: flex; align-items: center; gap: 8px; color: #fff; font-size: 1rem; margin-bottom: 10px; }
+      .info-card h3 svg { width: 18px; color: var(--blue-light); }
+      .info-card p { color: var(--text-muted); line-height: 1.6; font-size: .94rem; }
+      .feature-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-top: 20px; }
+      .feature-item { display: flex; gap: 12px; padding: 16px; border-radius: 16px; background: rgba(96, 165, 250, 0.06); border: 1px solid rgba(96, 165, 250, 0.14); color: var(--text-muted); line-height: 1.55; }
+      .feature-item i { color: var(--blue-light); width: 19px; height: 19px; flex: 0 0 auto; margin-top: 2px; }
+      .canva-placeholder { min-height: 320px; display: grid; place-items: center; text-align: center; padding: 34px; border: 1px dashed rgba(96, 165, 250, 0.35); border-radius: 14px; background: linear-gradient(135deg, rgba(96,165,250,.09), rgba(15,23,42,.32)); }
+      .canva-placeholder i { width: 44px; height: 44px; color: var(--blue-light); margin-bottom: 12px; }
+      .canva-placeholder p { max-width: 600px; color: var(--text-muted); line-height: 1.6; }
+      @media (max-width: 700px) {
+        .demo-container { height: 720px !important; min-height: 720px !important; }
+        .project-actions .btn-contact { width: 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-grid-overlay"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <nav class="navbar glass-panel" style="position: absolute;">
+      <div class="nav-content">
+        <span class="logo">CR</span>
+        <ul class="nav-links">
+          <li><a href="index.html#automations" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Voltar ao Portfólio</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container" style="padding-top: 140px;">
+      <div class="project-header reveal">
+        <h1>FinTrack</h1>
+        <p>Aplicação web para controle de finanças pessoais, construída com Python, Streamlit e SQLite. O projeto organiza receitas e despesas, importa extratos CSV/OFX com revisão segura e transforma movimentações em indicadores claros para apoiar decisões do dia a dia.</p>
+        <div class="badges">
+          <span>Python</span>
+          <span>Streamlit</span>
+          <span>SQLite</span>
+          <span>Pandas</span>
+          <span>Automação Financeira</span>
+        </div>
+        <div class="project-actions">
+          <a href="https://github.com/cari17ribeiro/fintrack" target="_blank" rel="noopener" class="btn-contact"><i data-lucide="github"></i> Ver repositório</a>
+          <a href="#canva-doc" class="btn-contact outline"><i data-lucide="presentation"></i> Documentação Canva</a>
+        </div>
+      </div>
+
+      <div class="content-section reveal" style="margin-top: 40px;">
+        <h2><i data-lucide="monitor-play"></i> Clone interativo</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Explore uma simulação navegável do FinTrack: adicione lançamentos, importe um extrato fictício, acompanhe saldo, receitas, despesas e gastos por categoria.</p>
+        <div class="demo-container glass-panel" style="padding: 0; border-radius: 16px; overflow: hidden; height: 82vh; min-height: 650px; display: flex; flex-direction: column; background-color: #070b14;">
+          <iframe src="demo-fintrack.html" style="width: 100%; height: 100%; border: none;" title="Clone interativo FinTrack"></iframe>
+        </div>
+      </div>
+
+      <div class="content-section reveal" style="margin-top: 80px;">
+        <h2><i data-lucide="sparkles"></i> Apresentação do projeto</h2>
+        <div class="info-grid">
+          <div class="info-card glass-panel">
+            <h3><i data-lucide="target"></i> Objetivo</h3>
+            <p>Centralizar o controle financeiro pessoal em uma interface simples, com visão de saldo atual, receitas, despesas, filtros por período e leitura segura de extratos.</p>
+          </div>
+          <div class="info-card glass-panel">
+            <h3><i data-lucide="shield-check"></i> Segurança</h3>
+            <p>O processamento dos arquivos acontece localmente. O sistema não solicita senhas bancárias e evita duplicidades com assinatura SHA-256 dos lançamentos importados.</p>
+          </div>
+          <div class="info-card glass-panel">
+            <h3><i data-lucide="test-tube-2"></i> Qualidade</h3>
+            <p>O projeto inclui testes automatizados das regras de negócio e fluxo de CI no GitHub Actions para validar o comportamento em Python 3.11 e 3.12.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-section reveal">
+        <h2><i data-lucide="wrench"></i> Tecnologias</h2>
+        <div class="badges" style="justify-content: flex-start; margin-top: 18px;">
+          <span>Python 3.11+</span>
+          <span>Streamlit</span>
+          <span>Pandas</span>
+          <span>SQLite</span>
+          <span>Pytest</span>
+          <span>GitHub Actions</span>
+          <span>CSV</span>
+          <span>OFX</span>
+        </div>
+      </div>
+
+      <div class="content-section reveal">
+        <h2><i data-lucide="list-checks"></i> Funcionalidades</h2>
+        <div class="feature-list">
+          <div class="feature-item"><i data-lucide="layout-dashboard"></i><span>Dashboard moderno com cards de saldo, receitas, despesas e total de lançamentos.</span></div>
+          <div class="feature-item"><i data-lucide="plus-circle"></i><span>Cadastro manual de receitas e despesas por data, valor, descrição e categoria.</span></div>
+          <div class="feature-item"><i data-lucide="file-input"></i><span>Importação de extratos CSV e OFX com etapa de revisão antes da gravação.</span></div>
+          <div class="feature-item"><i data-lucide="copy-check"></i><span>Detecção de lançamentos duplicados por assinatura SHA-256.</span></div>
+          <div class="feature-item"><i data-lucide="sliders-horizontal"></i><span>Configuração de saldo inicial e calibragem pelo saldo informado no extrato.</span></div>
+          <div class="feature-item"><i data-lucide="bar-chart-3"></i><span>Filtros por período e tipo, tabela de lançamentos e gráfico por categoria.</span></div>
+        </div>
+      </div>
+
+      <div id="canva-doc" class="content-section reveal" style="margin-top: 80px;">
+        <h2><i data-lucide="presentation"></i> Documentação Canva</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Espaço reservado para incorporar a documentação visual do FinTrack no Canva quando o link de embed estiver disponível.</p>
+        <div class="glass-panel" style="padding: 20px;">
+          <div class="canva-placeholder">
+            <div>
+              <i data-lucide="panel-top-open"></i>
+              <p>Substitua este bloco por um iframe do Canva usando o formato <strong>https://www.canva.com/design/SEU_ID/view?embed</strong>.</p>
+              <p style="margin-top: 10px; color: var(--blue-light);">A estrutura já está pronta para receber apresentação, documentação técnica ou estudo de caso.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        const reveals = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('active');
+            } else if (entry.boundingClientRect.top > 0) {
+              entry.target.classList.remove('active');
+            }
+          });
+        }, { threshold: 0.15 });
+        reveals.forEach(reveal => revealObserver.observe(reveal));
+      });
+    </script>
+  </body>
+</html>

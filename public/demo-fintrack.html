@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo FinTrack</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: #07162d;
+        font-family: "Segoe UI", Roboto, sans-serif;
+        background:
+          radial-gradient(circle at 86% 7%, rgba(53,184,255,.24), transparent 24rem),
+          radial-gradient(circle at 8% 56%, rgba(36,120,255,.14), transparent 28rem),
+          linear-gradient(145deg, #f7fbff 0%, #edf6ff 52%, #fbfdff 100%);
+      }
+      .app { display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+      aside {
+        padding: 24px;
+        color: #f2f8ff;
+        background: linear-gradient(165deg, rgba(6, 24, 52, .98), rgba(10, 50, 97, .96));
+        border-right: 1px solid rgba(102, 187, 255, .18);
+      }
+      .brand { display: flex; align-items: center; gap: 10px; font-size: 1.35rem; font-weight: 800; margin-bottom: 24px; }
+      .brand small { margin-left: auto; font-size: .55rem; letter-spacing: .14rem; opacity: .58; }
+      .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 18px; }
+      .tab { border: 0; border-radius: 11px; padding: 10px 8px; color: #eaf6ff; cursor: pointer; background: rgba(255,255,255,.07); }
+      .tab.active { background: linear-gradient(100deg, #1e78ff, #31b5ff); box-shadow: 0 10px 25px rgba(25,126,255,.25); }
+      .panel { display: none; }
+      .panel.active { display: block; }
+      label { display: block; margin: 14px 0 6px; font-size: .82rem; color: rgba(242,248,255,.78); }
+      input, select {
+        width: 100%;
+        border: 1px solid rgba(255,255,255,.16);
+        border-radius: 12px;
+        padding: 11px 12px;
+        color: #fff;
+        background: rgba(255,255,255,.08);
+        outline: none;
+      }
+      select option { color: #07162d; }
+      button.primary {
+        width: 100%;
+        margin-top: 16px;
+        border: 0;
+        border-radius: 12px;
+        padding: 12px;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(100deg, #1e78ff, #31b5ff);
+        box-shadow: 0 10px 28px rgba(25,126,255,.28);
+      }
+      main { padding: 28px; overflow: auto; }
+      .hero {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        min-height: 230px;
+        padding: 40px;
+        margin-bottom: 26px;
+        border-radius: 28px;
+        color: #fff;
+        background:
+          linear-gradient(120deg, rgba(5,25,58,.96), rgba(13,82,158,.91) 55%, rgba(34,153,236,.76)),
+          radial-gradient(circle at 75% 20%, #38bdf8, transparent 30%);
+        box-shadow: 0 24px 65px rgba(13,69,130,.20), inset 0 1px 1px rgba(255,255,255,.2);
+      }
+      .hero:after {
+        content: "";
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        right: -70px;
+        top: -160px;
+        border-radius: 50%;
+        border: 54px solid rgba(255,255,255,.06);
+        box-shadow: 0 0 0 55px rgba(255,255,255,.025);
+      }
+      .eyebrow, .section-label { font-size: .68rem; font-weight: 800; letter-spacing: .16rem; color: #2078d5; }
+      .hero .eyebrow { color: #72c7ff; }
+      h1 { margin: 10px 0; font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.05; }
+      h1 span { background: linear-gradient(90deg, #73c9ff, #d7f2ff); -webkit-background-clip: text; color: transparent; }
+      .hero p { max-width: 600px; margin: 0; color: rgba(239,248,255,.78); }
+      .hero-mark { z-index: 1; font-size: 5rem; font-weight: 900; opacity: .9; align-self: center; }
+      .metrics { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
+      .card, .table-wrap, .chart-wrap {
+        background: rgba(255,255,255,.72);
+        border: 1px solid rgba(255,255,255,.78);
+        border-radius: 20px;
+        backdrop-filter: blur(18px);
+        box-shadow: 0 13px 38px rgba(32,95,160,.10), inset 0 1px 0 rgba(255,255,255,.9);
+      }
+      .card { min-height: 120px; padding: 20px; overflow: hidden; position: relative; }
+      .card.primary { color: #fff; background: linear-gradient(135deg, rgba(22,92,182,.94), rgba(34,151,235,.88)); }
+      .card span { display: block; color: #69809a; font-size: .82rem; font-weight: 700; margin-bottom: 16px; }
+      .card.primary span { color: rgba(255,255,255,.78); }
+      .card strong { font-size: 1.45rem; }
+      .content-grid { display: grid; grid-template-columns: .9fr 1.4fr; gap: 18px; }
+      .chart-wrap, .table-wrap { padding: 20px; }
+      .bar { display: grid; grid-template-columns: 90px 1fr 72px; gap: 10px; align-items: center; margin: 14px 0; font-size: .9rem; }
+      .bar-track { height: 12px; border-radius: 999px; overflow: hidden; background: #dbeafe; }
+      .bar-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #2478ff, #35b8ff); }
+      table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+      th, td { padding: 12px 10px; border-bottom: 1px solid rgba(118,163,207,.22); text-align: left; }
+      th { color: #607890; font-size: .75rem; text-transform: uppercase; letter-spacing: .08rem; }
+      .income { color: #13805c; font-weight: 700; }
+      .expense { color: #d65353; font-weight: 700; }
+      .notice { margin-top: 12px; padding: 12px; border-radius: 12px; color: #cfeaff; background: rgba(255,255,255,.07); font-size: .86rem; line-height: 1.45; }
+      @media (max-width: 900px) {
+        .app { grid-template-columns: 1fr; }
+        aside { position: static; }
+        .metrics, .content-grid { grid-template-columns: 1fr; }
+        .hero-mark { display: none; }
+        main { padding: 20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside>
+        <div class="brand">◈ <b>FinTrack</b><small>SMART MONEY</small></div>
+        <div class="tabs">
+          <button class="tab active" data-tab="novo">Novo</button>
+          <button class="tab" data-tab="importar">Importar</button>
+          <button class="tab" data-tab="saldo">Saldo</button>
+        </div>
+
+        <section class="panel active" id="novo">
+          <label for="type">Tipo</label>
+          <select id="type">
+            <option value="despesa">Despesa</option>
+            <option value="receita">Receita</option>
+          </select>
+          <label for="desc">Descrição</label>
+          <input id="desc" value="Supermercado" />
+          <label for="category">Categoria</label>
+          <select id="category">
+            <option>Alimentação</option>
+            <option>Transporte</option>
+            <option>Moradia</option>
+            <option>Saúde</option>
+            <option>Lazer</option>
+            <option>Salário</option>
+          </select>
+          <label for="amount">Valor (R$)</label>
+          <input id="amount" type="number" value="185.90" step="10" />
+          <button class="primary" id="add">Adicionar lançamento</button>
+        </section>
+
+        <section class="panel" id="importar">
+          <p class="notice">Simule a importação de um extrato CSV/OFX. O FinTrack mostra uma revisão antes de gravar e ignora duplicados.</p>
+          <button class="primary" id="import">Revisar extrato exemplo</button>
+          <div class="notice" id="import-msg">Nenhum arquivo selecionado.</div>
+        </section>
+
+        <section class="panel" id="saldo">
+          <label for="opening">Saldo inicial (R$)</label>
+          <input id="opening" type="number" value="2400" step="100" />
+          <button class="primary" id="save-balance">Salvar saldo inicial</button>
+          <p class="notice">O saldo atual combina saldo inicial, receitas e despesas confirmadas.</p>
+        </section>
+      </aside>
+
+      <main>
+        <section class="hero">
+          <div>
+            <div class="eyebrow">FINANÇAS PESSOAIS, SEM COMPLICAÇÃO</div>
+            <h1>Clareza para decidir.<br><span>Controle para crescer.</span></h1>
+            <p>Todos os seus lançamentos organizados em uma visão simples, segura e inteligente.</p>
+          </div>
+          <div class="hero-mark">F◈</div>
+        </section>
+
+        <div class="section-label">PANORAMA ATUAL</div>
+        <section class="metrics">
+          <div class="card primary"><span>Saldo atual</span><strong id="balance">R$ 0,00</strong></div>
+          <div class="card"><span>Receitas no mês</span><strong id="income">R$ 0,00</strong></div>
+          <div class="card"><span>Despesas no mês</span><strong id="expense">R$ 0,00</strong></div>
+          <div class="card"><span>Lançamentos</span><strong id="count">0</strong></div>
+        </section>
+
+        <div class="section-label">EXPLORAR MOVIMENTAÇÕES</div>
+        <section class="content-grid">
+          <div class="chart-wrap">
+            <h3>Gastos por categoria</h3>
+            <div id="chart"></div>
+          </div>
+          <div class="table-wrap">
+            <h3>Últimos lançamentos</h3>
+            <table>
+              <thead>
+                <tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Valor</th></tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+      let opening = 2400;
+      let transactions = [
+        { date: '17/07/2026', desc: 'Salário', category: 'Salário', type: 'receita', amount: 5200 },
+        { date: '16/07/2026', desc: 'Aluguel', category: 'Moradia', type: 'despesa', amount: 1650 },
+        { date: '15/07/2026', desc: 'Mercado', category: 'Alimentação', type: 'despesa', amount: 342.75 },
+        { date: '14/07/2026', desc: 'Aplicativo transporte', category: 'Transporte', type: 'despesa', amount: 76.9 }
+      ];
+
+      function render() {
+        const income = transactions.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
+        const expense = transactions.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
+        document.querySelector('#balance').textContent = fmt.format(opening + income - expense);
+        document.querySelector('#income').textContent = fmt.format(income);
+        document.querySelector('#expense').textContent = fmt.format(expense);
+        document.querySelector('#count').textContent = transactions.length;
+        document.querySelector('#rows').innerHTML = transactions.map(t => `<tr><td>${t.date}</td><td>${t.desc}</td><td>${t.category}</td><td class="${t.type === 'receita' ? 'income' : 'expense'}">${t.type === 'receita' ? '+' : '-'} ${fmt.format(t.amount)}</td></tr>`).join('');
+        const grouped = transactions.filter(t => t.type === 'despesa').reduce((acc, t) => {
+          acc[t.category] = (acc[t.category] || 0) + t.amount;
+          return acc;
+        }, {});
+        const max = Math.max(...Object.values(grouped), 1);
+        document.querySelector('#chart').innerHTML = Object.entries(grouped).map(([cat, value]) => `
+          <div class="bar"><span>${cat}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(8, value / max * 100)}%"></div></div><strong>${fmt.format(value)}</strong></div>
+        `).join('');
+      }
+
+      document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab, .panel').forEach(el => el.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelector(`#${tab.dataset.tab}`).classList.add('active');
+      }));
+      document.querySelector('#add').addEventListener('click', () => {
+        transactions.unshift({
+          date: '17/07/2026',
+          desc: document.querySelector('#desc').value || 'Novo lançamento',
+          category: document.querySelector('#category').value,
+          type: document.querySelector('#type').value,
+          amount: Number(document.querySelector('#amount').value || 0)
+        });
+        render();
+      });
+      document.querySelector('#save-balance').addEventListener('click', () => {
+        opening = Number(document.querySelector('#opening').value || 0);
+        render();
+      });
+      document.querySelector('#import').addEventListener('click', () => {
+        const before = transactions.length;
+        const sample = [
+          { date: '13/07/2026', desc: 'Farmácia', category: 'Saúde', type: 'despesa', amount: 89.4 },
+          { date: '12/07/2026', desc: 'Freelance dashboard', category: 'Salário', type: 'receita', amount: 950 }
+        ];
+        sample.forEach(item => {
+          if (!transactions.some(t => t.desc === item.desc && t.amount === item.amount)) transactions.unshift(item);
+        });
+        document.querySelector('#import-msg').textContent = `${transactions.length - before} importados · ${before + sample.length - transactions.length} duplicados ignorados`;
+        render();
+      });
+      render();
+    </script>
+  </body>
+</html>

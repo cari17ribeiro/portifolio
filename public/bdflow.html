@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projeto: BD FLOW | Carina Ribeiro</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body>
+    <!-- Fundos Animados -->
+    <div class="bg-grid-overlay"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <!-- NavBar Simplificada -->
+    <nav class="navbar glass-panel" style="position: absolute;">
+      <div class="nav-content">
+        <span class="logo">RR</span>
+        <ul class="nav-links">
+          <li><a href="index.html" style="display: flex; align-items: center; gap: 6px;"><i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i> Voltar ao Portfólio</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container" style="padding-top: 140px;">
+      
+      <!-- Cabeçalho do Projeto -->
+      <div class="project-header reveal">
+        <h1>BD FLOW<br><span style="font-size: 1.8rem; color: var(--blue-light); font-weight: 400;">Smart Logistics App</span></h1>
+        
+        <!-- Texto com foco em IA, Telemetria e UX do Motorista -->
+        <p>
+          App de telemetria portuária e automação logística <em>mobile-first</em>. O sistema elimina gargalos na operação utilizando <strong>Inteligência Artificial</strong> (Google Vision e Roboflow) para ler placas e códigos ISO de contêineres em segundos. Além da extração de dados automatizada via OCR, a plataforma oferece um painel de produtividade e engajamento, permitindo aos motoristas acompanharem suas viagens, metas e premiações em tempo real.
+        </p>
+        
+        <div class="badges">
+          <span>React</span>
+          <span>Tailwind CSS</span>
+          <span>Google Vision API</span>
+          <span>Roboflow</span>
+          <span>Supabase</span>
+        </div>
+      </div>
+
+      <!-- Seção: Apresentação no Canva -->
+      <div class="content-section reveal">
+        <h2><i data-lucide="smartphone"></i> Demonstração do Aplicativo</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">Assista ao vídeo abaixo para conferir a interface limpa desenvolvida para o motorista, o fluxo de captura inteligente e a performance do app em ação.</p>
+        
+        <div class="glass-panel" style="padding: 20px; text-align: center;">
+          
+          <!-- Código do Canva Embutido (Proporção 16:9 mantida com o novo link do BD FLOW) -->
+          <div style="position: relative; width: 100%; height: 0; padding-top: 56.2500%; padding-bottom: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-top: 0; margin-bottom: 25px; overflow: hidden; border-radius: 12px; will-change: transform; border: 1px solid var(--glass-border);">
+            <iframe loading="lazy" style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; border: none; padding: 0; margin: 0; background-color: #070b14;"
+              src="https://www.canva.com/design/DAHOVrl9YD0/QuvoeuMINmCCbtB1Awkl8Q/view?embed" allowfullscreen="allowfullscreen" allow="fullscreen">
+            </iframe>
+          </div>
+          
+          <!-- Link adaptado para o estilo do portfólio -->
+          <a href="https://www.canva.com/design/DAHOVrl9YD0/QuvoeuMINmCCbtB1Awkl8Q/view?utm_content=DAHOVrl9YD0&utm_campaign=designshare&utm_medium=embeds&utm_source=link" target="_blank" rel="noopener" class="btn-link" style="display: inline-flex; align-items: center; gap: 8px;">
+            Visualizar projeto original no Canva <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+          </a>
+          
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Inicializa animações e ícones -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        
+        const reveals = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('active');
+            } else {
+              if (entry.boundingClientRect.top > 0) {
+                entry.target.classList.remove('active');
+              }
+            }
+          });
+        }, { threshold: 0.15 });
+
+        reveals.forEach(reveal => revealObserver.observe(reveal));
+      });
+    </script>
+  </body>
+</html>

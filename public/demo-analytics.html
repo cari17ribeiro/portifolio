@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Business Analytics</title>
+    
+    <script src="https://unpkg.com/tailwindcss-cdn@3.4.1/tailwindcss.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script>
+      tailwind.config = {
+        important: true,
+      }
+    </script>
+    
+    <style>
+        body, html, #root {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #070b14;
+            color: #e2e8f0;
+            overflow: hidden; 
+        }
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #070b14;
+            color: #22d3ee;
+            font-family: sans-serif;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(34, 211, 238, 0.2);
+            border-left-color: #22d3ee;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0c1222; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+        .custom-scrollbar::-webkit-scrollbar { height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .dragging { opacity: 0.5; transform: scale(0.95); transition: 0.2s; }
+        
+        /* Fundo do Mural Pontilhado */
+        .mural-bg {
+            background-image: radial-gradient(#1e293b 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+        
+        /* Oculta scrollbars no mobile para visual limpo */
+        @media (max-width: 768px) {
+            .hide-scroll-mobile::-webkit-scrollbar { display: none; }
+            .hide-scroll-mobile { -ms-overflow-style: none; scrollbar-width: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading-screen">
+            <div class="spinner"></div>
+            <h2 style="font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">Carregando Business Analytics...</h2>
+            <p style="color: #64748b; margin-top: 10px; font-size: 0.8rem;">Ajustando Ambiente...</p>
+        </div>
+    </div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useMemo, useEffect, Fragment, useRef } from 'https://esm.sh/react@18';
+        import { createRoot } from 'https://esm.sh/react-dom@18/client';
+        import { 
+          TrendingUp, TrendingDown, Filter, DollarSign, BookOpen, AlertCircle, CheckCircle2, X, ChevronDown, ChevronRight, Layers, Search, PlusSquare, MinusSquare, Activity, Cloud, RefreshCw, Home, BarChart2, Settings, Target, Wrench, Truck, Zap, MessageSquare, GripHorizontal, Send, User, CheckSquare, Flame, Box, Pin, LayoutDashboard
+        } from 'https://esm.sh/lucide-react@0.292.0';
+
+        const MONTHS_ORDER = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+
+        const normalizeStr = (s) => {
+          if (!s) return 'N/A';
+          return String(s).trim().toUpperCase().replace(/\s+/g, ' '); 
+        };
+
+        const normalizeModelo = (modelo) => {
+          let m = normalizeStr(modelo);
+          if (m === 'SCA' || m.includes('SCANIA')) return 'SCANIA';
+          if (m === 'VOL' || m.includes('VOLVO')) return 'VOLVO';
+          if (m === 'MB' || m.includes('MERCEDES')) return 'MERCEDES';
+          if (m === 'TOY' || m.includes('TOYOTA')) return 'TOYOTA';
+          if (m === 'HEL' || m.includes('HELI')) return 'HELI';
+          if (m === 'KAL' || m.includes('KALMAR')) return 'KALMAR';
+          if (m === 'HYSTER' || m.includes('HYS')) return 'HYSTER';
+          if (m === 'FAC' || m.includes('FACHINNI') || m.includes('FACCHINI')) return 'FACHINNI';
+          if (m.includes('COMBI') || m.includes('CBL')) return 'COMBILIFT';
+          if (m.includes('LINDE')) return 'LINDE';
+          if (m.includes('STILL')) return 'STILL';
+          if (m.includes('YALE')) return 'YALE';
+          return m;
+        };
+
+        const normalizeConta = (conta) => {
+          let c = normalizeStr(conta);
+          if (c.includes('COMBUST')) return 'COMBUSTÍVEIS PARA EQUIPAMENTOS';
+          if (c.includes('PNEU')) return 'PNEUS RECAPADOS E BORRACHARIA';
+          if (c.includes('MANUT') && c.includes('EMPILHADEIRA')) return 'MANUT. E CONSERV. EMPILHADEIRAS';
+          if (c.includes('MANUT') && c.includes('CAMINH')) return 'MANUT. E CONSERV. CAMINHÕES';
+          return c;
+        };
+
+        const ReachStackerIcon = ({ size = 20, className = "" }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M4 14h6l2-4h6v6H4z" />
+            <circle cx="7" cy="18" r="2" />
+            <circle cx="15" cy="18" r="2" />
+            <line x1="12" y1="10" x2="21" y2="4" />
+            <rect x="18" y="2" width="4" height="2" fill="currentColor" />
+          </svg>
+        );
+
+        const FamilyIcon = ({ family, className = "", size = 20 }) => {
+          const fam = family.toUpperCase();
+          if (fam === 'CM' || fam === 'SR' || fam.includes('CAMINH')) return <Truck size={size} className={className || "text-blue-400"} />;
+          if (fam === 'EE' || fam.includes('ELÉTRICA')) return <Zap size={size} className={className || "text-yellow-400"} />;
+          if (fam === 'EC' || fam.includes('COMBUST')) return <Flame size={size} className={className || "text-orange-500"} />;
+          if (fam === 'RS' || fam.includes('REACH')) return <ReachStackerIcon size={size} className={className || "text-emerald-400"} />;
+          return <Layers size={size} className={className || "text-purple-400"} />;
+        };
+
+        function App() {
+          const [data, setData] = useState([]);
+          const [indicadoresData, setIndicadoresData] = useState([]);
+          const [isLoading, setIsLoading] = useState(true);
+          const [fetchError, setFetchError] = useState(null);
+          
+          const [selectedFamilias, setSelectedFamilias] = useState([]); 
+          const [isFilterOpen, setIsFilterOpen] = useState(false);
+          
+          const [activeTab, setActiveTab] = useState('dashboard'); 
+          const [selectedConta, setSelectedConta] = useState(null);
+          const [selectedIndicadorModal, setSelectedIndicadorModal] = useState(null); 
+          const [expandedAccounts, setExpandedAccounts] = useState({});
+          
+          const [isSyncing, setIsSyncing] = useState(false);
+          const [lastSync, setLastSync] = useState('');
+          const [cardOrders, setCardOrders] = useState({});
+
+          const [currentUserName, setCurrentUserName] = useState('');
+          const [activeThreadId, setActiveThreadId] = useState(null);
+          const [comments, setComments] = useState({});
+          const [muralNotes, setMuralNotes] = useState([]);
+          const [touchOffset, setTouchOffset] = useState(null);
+
+          const fetchGoogleUser = () => {
+            if (typeof google !== 'undefined' && google.script) {
+              google.script.run
+                .withSuccessHandler((email) => {
+                  if (email && email.trim() !== '') {
+                    const namePart = email.split('@')[0];
+                    const formattedName = namePart.split('.').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+                    setCurrentUserName(formattedName);
+                  }
+                })
+                .getUserEmail();
+            }
+          };
+
+          const fetchCommentsFromSheets = () => {
+              if (typeof google !== 'undefined' && google.script) {
+                  google.script.run
+                      .withSuccessHandler((response) => {
+                          if(response) setComments(response);
+                      })
+                      .getComments();
+              }
+          };
+
+          const handleAddComment = (e) => {
+              e.preventDefault();
+              const text = e.target.msg.value.trim();
+              if (!text) return;
+              
+              const newMsg = {
+                  threadId: activeThreadId,
+                  user: currentUserName || "Analista Anônimo",
+                  text: text,
+                  timestamp: Date.now(),
+                  time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+              };
+
+              setComments(prev => ({ ...prev, [activeThreadId]: [...(prev[activeThreadId] || []), newMsg] }));
+
+              if (typeof google !== 'undefined' && google.script) {
+                  google.script.run.addComment(newMsg);
+              }
+              
+              e.target.reset();
+          };
+
+          const handlePinComment = (comment, threadId) => {
+              const exists = muralNotes.find(n => n.id === comment.timestamp);
+              if (exists) return; 
+              
+              const newNote = {
+                  id: comment.timestamp,
+                  threadId: threadId,
+                  user: comment.user,
+                  text: comment.text,
+                  time: comment.time,
+                  x: Math.random() * 200 + 20, 
+                  y: Math.random() * 200 + 60, 
+                  replies: []
+              };
+              setMuralNotes(prev => [...prev, newNote]);
+          };
+
+          const handleRemoveMuralNote = (id) => {
+              setMuralNotes(prev => prev.filter(n => n.id !== id));
+          };
+
+          const handleAddMuralReply = (noteId, text) => {
+              const reply = {
+                  user: currentUserName || "Analista",
+                  text: text,
+                  time: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+              };
+              setMuralNotes(prev => prev.map(n => {
+                  if (n.id === noteId) {
+                      return { ...n, replies: [...n.replies, reply] };
+                  }
+                  return n;
+              }));
+          };
+
+          const handleTouchStartNote = (e, noteId) => {
+              const touch = e.touches[0];
+              const rect = e.currentTarget.getBoundingClientRect();
+              setTouchOffset({ x: touch.clientX - rect.left, y: touch.clientY - rect.top, id: noteId });
+          };
+
+          const handleTouchMoveNote = (e) => {
+              if (!touchOffset) return;
+              const touch = e.touches[0];
+              const newX = touch.clientX - touchOffset.x;
+              const newY = touch.clientY - touchOffset.y; 
+
+              setMuralNotes(prev => prev.map(n => n.id === touchOffset.id ? { ...n, x: newX, y: newY } : n));
+          };
+
+          const handleTouchEndNote = () => {
+              setTouchOffset(null);
+          };
+
+          const fetchDataFromSheets = () => {
+            setIsSyncing(true);
+            setFetchError(null);
+            
+            if (typeof google !== 'undefined' && google.script) {
+              google.script.run
+                .withSuccessHandler((response) => {
+                  if (response.financeiro) setData(response.financeiro);
+                  if (response.indicadores) setIndicadoresData(response.indicadores);
+                  setIsLoading(false);
+                  setIsSyncing(false);
+                  const now = new Date();
+                  setLastSync(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+                  fetchCommentsFromSheets(); 
+                })
+                .withFailureHandler((error) => {
+                  console.error("Erro ao buscar dados:", error);
+                  setFetchError("Falha ao carregar dados da planilha.");
+                  setIsLoading(false);
+                  setIsSyncing(false);
+                })
+                .getDashboardData(); 
+            } else {
+              setTimeout(() => {
+                const mockFin = [
+                  { mes: 'JANEIRO', ano: 2025, familia: 'RS', modelo: 'KALMAR', contaContabil: 'COMBUSTÍVEIS PARA EQUIPAMENTOS', valor: 405621.63, tipo: 'REALIZADO' },
+                  { mes: 'FEVEREIRO', ano: 2025, familia: 'RS', modelo: 'KALMAR', contaContabil: 'COMBUSTÍVEIS PARA EQUIPAMENTOS', valor: 418027.07, tipo: 'REALIZADO' },
+                  { mes: 'JANEIRO', ano: 2026, familia: 'RS', modelo: 'KALMAR', contaContabil: 'COMBUSTÍVEIS PARA EQUIPAMENTOS', valor: 420000.00, tipo: 'ORÇADO' },
+                  { mes: 'FEVEREIRO', ano: 2026, familia: 'RS', modelo: 'KALMAR', contaContabil: 'COMBUSTÍVEIS PARA EQUIPAMENTOS', valor: 425000.00, tipo: 'ORÇADO' },
+                  { mes: 'JANEIRO', ano: 2026, familia: 'RS', modelo: 'KALMAR', contaContabil: 'COMBUSTÍVEIS PARA EQUIPAMENTOS', valor: 410500.20, tipo: 'REALIZADO' },
+                  { mes: 'JANEIRO', ano: 2025, familia: 'CM', modelo: 'SCANIA', contaContabil: 'MANUTENÇÃO', valor: 15000.00, tipo: 'REALIZADO' },
+                  { mes: 'JANEIRO', ano: 2026, familia: 'CM', modelo: 'SCANIA', contaContabil: 'MANUTENÇÃO', valor: 18000.00, tipo: 'ORÇADO' },
+                  { mes: 'JANEIRO', ano: 2026, familia: 'CM', modelo: 'SCANIA', contaContabil: 'MANUTENÇÃO', valor: 19500.00, tipo: 'REALIZADO' },
+                ];
+                const mockInd = [
+                  { mes: 'JANEIRO', ano: 2025, familia: 'RS', modelo: 'KALMAR', indicador: 'LITROS', valor: 68500, tipo: 'REALIZADO' },
+                  { mes: 'FEVEREIRO', ano: 2025, familia: 'RS', modelo: 'KALMAR', indicador: 'LITROS', valor: 71200, tipo: 'REALIZADO' },
+                  { mes: 'JANEIRO', ano: 2026, familia: 'RS', modelo: 'KALMAR', indicador: 'LITROS', valor: 70374, tipo: 'ORÇADO' },
+                  { mes: 'FEVEREIRO', ano: 2026, familia: 'RS', modelo: 'KALMAR', indicador: 'LITROS', valor: 70374, tipo: 'ORÇADO' },
+                  { mes: 'JANEIRO', ano: 2026, familia: 'RS', modelo: 'KALMAR', indicador: 'LITROS', valor: 69500, tipo: 'REALIZADO' },
+                  { mes: 'JANEIRO', ano: 2025, familia: 'RS', modelo: 'KALMAR', indicador: 'HORAS TRABALHADAS', valor: 450, tipo: 'REALIZADO' },
+                  { mes: 'JANEIRO', ano: 2026, familia: 'RS', modelo: 'KALMAR', indicador: 'HORAS TRABALHADAS', valor: 500, tipo: 'ORÇADO' },
+                  { mes: 'JANEIRO', ano: 2026, familia: 'RS', modelo: 'KALMAR', indicador: 'HORAS TRABALHADAS', valor: 480, tipo: 'REALIZADO' },
+                ];
+                setData(mockFin);
+                setIndicadoresData(mockInd);
+                setFetchError("Ambiente local detectado. Exibindo dados simulados.");
+                setIsLoading(false);
+                setIsSyncing(false);
+              }, 1500);
+            }
+          };
+
+          useEffect(() => {
+            fetchDataFromSheets();
+            fetchGoogleUser();
+            const interval = setInterval(fetchCommentsFromSheets, 30000);
+            return () => clearInterval(interval);
+          }, []);
+
+          const activeMonths2026 = useMemo(() => {
+            const months = new Set();
+            data.forEach(d => {
+              if (d.ano === 2026 && d.tipo === 'REALIZADO' && Math.abs(d.valor) >= 0.001) months.add(d.mes.toUpperCase());
+            });
+            indicadoresData.forEach(d => {
+              if (d.ano === 2026 && d.tipo === 'REALIZADO' && Math.abs(d.valor) >= 0.001) months.add(d.mes.toUpperCase());
+            });
+            return MONTHS_ORDER.filter(m => months.has(m));
+          }, [data, indicadoresData]);
+
+          const numActiveMonths = activeMonths2026.length > 0 ? activeMonths2026.length : 12;
+          const ytdLabel = activeMonths2026.length > 0 ? activeMonths2026.map(m => m.substring(0,3)).join(', ') : 'Ano Todo';
+
+          const familias = useMemo(() => {
+            const f = new Set([...data.map(d => d.familia), ...indicadoresData.map(d => d.familia)].filter(Boolean));
+            return Array.from(f).sort();
+          }, [data, indicadoresData]);
+
+          const toggleFamiliaFilter = (fam) => {
+             if (selectedFamilias.includes(fam)) {
+                 setSelectedFamilias(selectedFamilias.filter(f => f !== fam));
+             } else {
+                 setSelectedFamilias([...selectedFamilias, fam]);
+             }
+          };
+
+          const filteredData = useMemo(() => {
+            if (selectedFamilias.length === 0) return data;
+            return data.filter(d => selectedFamilias.includes(d.familia));
+          }, [data, selectedFamilias]);
+
+          const monthlyStats = useMemo(() => {
+            const stats = {};
+            MONTHS_ORDER.forEach(m => { stats[m] = { label: m, real2025: 0, orcado2026: 0, real2026: 0 }; });
+            filteredData.forEach(item => {
+              const mes = item.mes.toUpperCase();
+              if (!stats[mes]) return;
+              if (item.ano === 2025 && item.tipo === 'REALIZADO') stats[mes].real2025 += item.valor;
+              else if (item.ano === 2026 && item.tipo === 'ORÇADO') stats[mes].orcado2026 += item.valor;
+              else if (item.ano === 2026 && item.tipo === 'REALIZADO') stats[mes].real2026 += item.valor;
+            });
+            return Object.values(stats);
+          }, [filteredData]);
+
+          const accountStats = useMemo(() => {
+            const stats = {};
+            filteredData.forEach(item => {
+              const conta = item.contaContabil;
+              if (!stats[conta]) {
+                stats[conta] = { conta, real2025: 0, orcado2026: 0, real2026: 0, meses: {} };
+                MONTHS_ORDER.forEach(m => { stats[conta].meses[m] = { label: m, real2025: 0, orcado2026: 0, real2026: 0 }; });
+              }
+              const m = item.mes.toUpperCase();
+              const val = item.valor;
+              const isActive = activeMonths2026.length === 0 || activeMonths2026.includes(m);
+
+              if (item.ano === 2025 && item.tipo === 'REALIZADO') { 
+                if (isActive) stats[conta].real2025 += val; 
+                if (stats[conta].meses[m]) stats[conta].meses[m].real2025 += val; 
+              } 
+              else if (item.ano === 2026 && item.tipo === 'ORÇADO') { 
+                if (isActive) stats[conta].orcado2026 += val; 
+                if (stats[conta].meses[m]) stats[conta].meses[m].orcado2026 += val; 
+              } 
+              else if (item.ano === 2026 && item.tipo === 'REALIZADO') { 
+                stats[conta].real2026 += val; 
+                if (stats[conta].meses[m]) stats[conta].meses[m].real2026 += val; 
+              }
+            });
+            return Object.values(stats).sort((a, b) => b.orcado2026 - a.orcado2026);
+          }, [filteredData, activeMonths2026]);
+
+          const totals = useMemo(() => {
+            return monthlyStats.reduce((acc, curr) => {
+              const isActive = activeMonths2026.length === 0 || activeMonths2026.includes(curr.label);
+              return {
+                real2025: acc.real2025 + (isActive ? curr.real2025 : 0),
+                orcado2026: acc.orcado2026 + (isActive ? curr.orcado2026 : 0),
+                real2026: acc.real2026 + curr.real2026,
+              };
+            }, { real2025: 0, orcado2026: 0, real2026: 0 });
+          }, [monthlyStats, activeMonths2026]);
+
+          const varOrcadoReal = totals.orcado2026 > 0 ? ((totals.real2026 - totals.orcado2026) / totals.orcado2026) * 100 : 0;
+          
+          const indFilteredData = useMemo(() => {
+             if (selectedFamilias.length === 0) return indicadoresData;
+             return indicadoresData.filter(d => selectedFamilias.includes(d.familia));
+          }, [indicadoresData, selectedFamilias]);
+
+          const familySummary = useMemo(() => {
+             const stats = {};
+             const activeFamilias = selectedFamilias.length > 0 ? selectedFamilias : familias;
+
+             activeFamilias.forEach(f => {
+                stats[f] = { financeiro: { r25: 0, o26: 0, r26: 0 }, indicadores: {} };
+             });
+
+             filteredData.forEach(d => {
+                const fam = d.familia || 'SEM FAMILIA';
+                if (!stats[fam]) return;
+                
+                const val = d.valor;
+                const m = d.mes.toUpperCase();
+                const isActive = activeMonths2026.length === 0 || activeMonths2026.includes(m);
+                
+                if (d.ano === 2025 && d.tipo === 'REALIZADO' && isActive) stats[fam].financeiro.r25 += val;
+                else if (d.ano === 2026 && d.tipo === 'ORÇADO' && isActive) stats[fam].financeiro.o26 += val;
+                else if (d.ano === 2026 && d.tipo === 'REALIZADO') stats[fam].financeiro.r26 += val;
+             });
+
+             indFilteredData.forEach(d => {
+                const fam = d.familia || 'SEM FAMILIA';
+                const ind = d.indicador || 'DESCONHECIDO';
+                if (!stats[fam]) return;
+
+                if (!stats[fam].indicadores[ind]) stats[fam].indicadores[ind] = { total: { r25: 0, o26: 0, r26: 0 } };
+                
+                const val = d.valor;
+                const m = d.mes.toUpperCase();
+                const isActive = activeMonths2026.length === 0 || activeMonths2026.includes(m);
+                
+                if (d.ano === 2025 && d.tipo === 'REALIZADO' && isActive) stats[fam].indicadores[ind].total.r25 += val;
+                else if (d.ano === 2026 && d.tipo === 'ORÇADO' && isActive) stats[fam].indicadores[ind].total.o26 += val;
+                else if (d.ano === 2026 && d.tipo === 'REALIZADO') stats[fam].indicadores[ind].total.r26 += val;
+             });
+             return stats;
+          }, [filteredData, indFilteredData, activeMonths2026, familias, selectedFamilias]);
+
+          const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+          const formatNumber = (val) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(val);
+          const toggleAccountExpand = (conta) => setExpandedAccounts(prev => ({ ...prev, [conta]: !prev[conta] }));
+          
+          const handleDropIndicator = (famName, sourceInd, targetInd) => {
+              if (sourceInd === targetInd) return;
+              setCardOrders(prev => {
+                  const validInds = Object.keys(familySummary[famName].indicadores).filter(i => {
+                      const d = familySummary[famName].indicadores[i].total;
+                      return Math.abs(d.r25) > 0.001 || Math.abs(d.o26) > 0.001 || Math.abs(d.r26) > 0.001;
+                  });
+                  const hasFin = (Math.abs(familySummary[famName].financeiro.r25) > 0.001 || Math.abs(familySummary[famName].financeiro.o26) > 0.001 || Math.abs(familySummary[famName].financeiro.r26) > 0.001);
+                  
+                  let currentOrder = prev[famName];
+                  if (!currentOrder) {
+                      currentOrder = hasFin ? ['CUSTO FINANCEIRO', ...validInds] : [...validInds];
+                  }
+
+                  const sourceIdx = currentOrder.indexOf(sourceInd);
+                  const targetIdx = currentOrder.indexOf(targetInd);
+                  if (sourceIdx < 0 || targetIdx < 0) return prev;
+
+                  const newOrder = [...currentOrder];
+                  newOrder.splice(sourceIdx, 1);
+                  newOrder.splice(targetIdx, 0, sourceInd);
+                  
+                  return { ...prev, [famName]: newOrder };
+              });
+          };
+
+          if (isLoading) {
+            return (
+              <div className="loading-screen">
+                <div className="spinner"></div>
+                <h2 style={{fontSize: '1.2rem', fontWeight: 'bold', letterSpacing: '2px', textTransform: 'uppercase'}}>Carregando Business Analytics...</h2>
+                <p style={{color: '#64748b', marginTop: '10px', fontSize: '0.8rem'}}>Extraindo Dados Operacionais</p>
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex flex-col md:flex-row h-screen bg-[#070b14] text-slate-200 font-sans overflow-hidden selection:bg-cyan-500/30">
+              
+              <aside className="fixed bottom-0 md:relative w-full md:w-20 bg-[#0c1222] border-t md:border-t-0 md:border-r border-[#1e293b] flex flex-row md:flex-col items-center justify-around md:justify-start md:py-6 shadow-[0_-4px_24px_rgba(0,0,0,0.5)] md:shadow-[4px_0_24px_rgba(0,0,0,0.5)] z-[60] h-16 md:h-full shrink-0 transition-all">
+                <div className="hidden md:flex w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 items-center justify-center mb-10 shadow-[0_0_15px_rgba(6,182,212,0.4)] cursor-pointer">
+                  <Activity className="text-white" size={24} strokeWidth={2.5}/>
+                </div>
+                
+                <nav className="flex flex-row md:flex-col gap-2 md:gap-6 flex-1 w-full items-center justify-around md:justify-start px-2 md:px-0">
+                  <NavItem icon={<Home size={20}/>} active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} tooltip="Resumo Financeiro" />
+                  <NavItem icon={<BarChart2 size={20}/>} active={activeTab === 'contas'} onClick={() => setActiveTab('contas')} tooltip="Contas Contábeis" />
+                  <NavItem icon={<Target size={20}/>} active={activeTab === 'indicadores'} onClick={() => setActiveTab('indicadores')} tooltip="Painel Operacional" />
+                  <div className="hidden md:block w-8 h-px bg-[#1e293b] my-2"></div>
+                  <NavItem icon={<LayoutDashboard size={20}/>} active={activeTab === 'mural'} onClick={() => setActiveTab('mural')} tooltip="Mural de Destaques" />
+                </nav>
+
+                <div className="hidden md:flex mt-auto flex-col items-center gap-4">
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest text-center">Sync:<br/>{lastSync}</span>
+                  <button onClick={fetchDataFromSheets} className="p-3 rounded-xl bg-[#1e293b] text-slate-400 hover:text-cyan-400 hover:bg-[#162032] transition-all relative group shadow-lg" title="Sincronizar com Nuvem">
+                    {isSyncing ? <RefreshCw size={20} className="animate-spin text-cyan-400" /> : <Cloud size={20} />}
+                  </button>
+                </div>
+              </aside>
+
+              <main className="flex-1 flex flex-col h-screen overflow-hidden bg-[#0a0f1c] relative w-full pb-16 md:pb-0">
+                
+                <div className="fixed top-0 left-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-cyan-600/10 rounded-full blur-[80px] md:blur-[120px] pointer-events-none"></div>
+                <div className="fixed bottom-0 right-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-purple-600/10 rounded-full blur-[80px] md:blur-[120px] pointer-events-none"></div>
+
+                <header className="h-auto md:h-20 py-4 md:py-0 border-b border-[#1e293b] bg-[#0c1222]/90 backdrop-blur-md flex flex-col md:flex-row items-start md:items-center justify-between px-4 md:px-8 z-50 relative shrink-0 shadow-sm gap-4 md:gap-0">
+                  <div>
+                    <h1 className="text-sm md:text-lg font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-slate-100 to-slate-400 uppercase leading-snug">
+                      Business Analytics <br className="md:hidden" />
+                      <span className="text-cyan-400 font-medium">| Manutenção (YTD: {ytdLabel})</span>
+                    </h1>
+                  </div>
+                  
+                  <div className="w-full md:w-auto flex items-center justify-between md:justify-end gap-4">
+                    <div className="relative w-full md:w-auto">
+                      <div onClick={() => setIsFilterOpen(!isFilterOpen)} className="flex items-center justify-between md:justify-start gap-3 bg-[#1e293b] px-4 py-2.5 rounded-lg border border-[#334155] shadow-sm cursor-pointer hover:border-cyan-500/50 transition-colors w-full md:w-auto">
+                        <div className="flex items-center gap-2">
+                           <Filter size={16} className="text-cyan-400"/>
+                           <span className="text-[10px] md:text-xs font-bold text-white uppercase tracking-wider select-none truncate">
+                             {selectedFamilias.length === 0 ? 'TODAS AS FAMÍLIAS' : `${selectedFamilias.length} Selecionadas`}
+                           </span>
+                        </div>
+                        <ChevronDown size={14} className="text-slate-400"/>
+                      </div>
+                      
+                      {isFilterOpen && (
+                        <div className="absolute right-0 md:right-0 left-0 md:left-auto mt-2 w-full md:w-56 bg-[#0f172a] border border-[#1e293b] rounded-xl shadow-2xl z-[70] overflow-hidden">
+                          <div className="p-2 border-b border-[#1e293b]">
+                            <button onClick={() => { setSelectedFamilias([]); setIsFilterOpen(false); }} className="text-[10px] w-full text-center py-2 text-slate-400 hover:text-white uppercase font-bold tracking-widest bg-[#111827] rounded hover:bg-[#1e293b] transition-colors">Limpar Filtros</button>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto p-2 flex flex-col gap-1 custom-scrollbar">
+                            {familias.map(f => (
+                              <label key={f} className="flex items-center gap-3 p-3 md:p-2 hover:bg-[#162032] rounded cursor-pointer transition-colors group">
+                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedFamilias.includes(f) ? 'bg-cyan-500 border-cyan-500' : 'bg-[#070b14] border-[#334155] group-hover:border-cyan-500/50'}`}>
+                                  {selectedFamilias.includes(f) && <CheckSquare size={12} className="text-white"/>}
+                                </div>
+                                <span className="text-xs font-bold text-slate-300 flex items-center gap-2"><FamilyIcon family={f} size={14}/> {f}</span>
+                                <input type="checkbox" className="hidden" checked={selectedFamilias.includes(f)} onChange={() => toggleFamiliaFilter(f)} />
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <button onClick={fetchDataFromSheets} className="md:hidden p-2.5 rounded-lg bg-[#1e293b] border border-[#334155] text-slate-400">
+                       <RefreshCw size={16} className={isSyncing ? "animate-spin text-cyan-400" : ""} />
+                    </button>
+                  </div>
+                </header>
+
+                {(activeTab !== 'mural') && (
+                  <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10 custom-scrollbar hide-scroll-mobile" onClick={() => isFilterOpen && setIsFilterOpen(false)}>
+                    
+                    {fetchError && (
+                      <div className="bg-red-900/40 border border-red-500/50 p-3 md:p-4 rounded-xl flex items-center justify-between mb-6 shadow-sm">
+                         <div className="flex items-center gap-3">
+                           <AlertCircle className="text-red-400 shrink-0" size={20} />
+                           <div>
+                             <p className="text-red-200 font-bold text-xs md:text-sm">{fetchError}</p>
+                           </div>
+                         </div>
+                         <button onClick={() => setFetchError(null)} className="text-red-400 hover:text-red-200 ml-2"><X size={16}/></button>
+                      </div>
+                    )}
+
+                    {activeTab === 'dashboard' && (
+                      <div className="space-y-4 md:space-y-6 relative animate-in fade-in zoom-in-95 duration-500">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4">
+                          <h2 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-widest">Principais Indicadores Financeiros</h2>
+                          <button onClick={() => setActiveThreadId('DASHBOARD_GERAL')} className="flex items-center gap-2 text-[10px] uppercase tracking-wider font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 px-3 py-1.5 rounded-lg hover:bg-cyan-500/20 transition-colors w-full md:w-auto justify-center">
+                            <MessageSquare size={14}/> Comentar Análise
+                          </button>
+                        </div>
+                        
+                        {/* ALTERADO: Grid agora usa xl:grid-cols-4 para não amassar os cards em telas médias */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+                          <DarkKPICard title="Realizado 2025 (YTD)" value={formatCurrency(totals.real2025)} color="cyan" pct={null} />
+                          <DarkKPICard title="Orçado 2026 (YTD)" value={formatCurrency(totals.orcado2026)} color="purple" pct={null} />
+                          <DarkKPICard title="Realizado 2026 (YTD)" value={formatCurrency(totals.real2026)} color="blue" pct={totals.orcado2026 > 0 ? (totals.real2026/totals.orcado2026)*100 : 0} />
+                          
+                          <div className="bg-[#111827] border border-[#1f2937] rounded-xl p-4 md:p-5 relative overflow-hidden flex flex-col justify-between group hover:border-[#374151] transition-all shadow-sm">
+                            <div className={`absolute top-0 left-0 w-1 h-full ${varOrcadoReal > 0 ? 'bg-red-500' : 'bg-emerald-500'}`}></div>
+                            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 pl-2">Desvio (Real x Orç)</h3>
+                            <div className="pl-2">
+                              {/* ALTERADO: Fonte flexível e quebra de linha protegida */}
+                              <div className={`text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight whitespace-nowrap ${varOrcadoReal > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                                {varOrcadoReal > 0 ? '+' : ''}{varOrcadoReal.toFixed(2)}%
+                              </div>
+                              <div className="mt-2 md:mt-4 flex items-center justify-between text-[10px] md:text-xs">
+                                <span className="text-slate-500 font-medium">Status do Budget</span>
+                                <span className="text-slate-200 font-bold">{varOrcadoReal > 0 ? 'Acima' : 'Dentro'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="bg-[#111827] border border-[#1f2937] rounded-xl p-4 md:p-6 mt-4 md:mt-6 relative overflow-hidden shadow-sm hover:border-[#374151] transition-colors group">
+                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                            <h2 className="text-xs md:text-sm font-bold text-slate-200 uppercase tracking-widest">Tendência de Custos (Ano)</h2>
+                            <div className="flex flex-wrap gap-3 md:gap-4">
+                              <div className="flex items-center gap-1.5"><div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-slate-500"></div><span className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Real '25</span></div>
+                              <div className="flex items-center gap-1.5"><div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div><span className="text-[9px] md:text-[10px] font-bold text-blue-400 uppercase tracking-wider">Orç '26</span></div>
+                              <div className="flex items-center gap-1.5"><div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div><span className="text-[9px] md:text-[10px] font-bold text-cyan-400 uppercase tracking-wider">Real '26</span></div>
+                            </div>
+                          </div>
+                          <div className="h-[250px] md:h-[380px] w-full">
+                            <NeonLineChart data={monthlyStats} formatData={formatCurrency} activeMonths={activeMonths2026} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'contas' && (
+                      <div className="bg-[#111827] border border-[#1f2937] rounded-xl overflow-hidden relative animate-in fade-in zoom-in-95 duration-500 shadow-sm flex flex-col">
+                        <div className="p-4 md:p-6 border-b border-[#1f2937] bg-[#0f172a] flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                          <div>
+                            <h2 className="text-xs md:text-sm font-bold text-slate-200 uppercase tracking-widest">Controle de Contas Financeiras</h2>
+                            <p className="text-[10px] md:text-xs text-slate-400 mt-1">Ajustado ao YTD ({ytdLabel}). Arraste a tabela para os lados se necessário.</p>
+                          </div>
+                        </div>
+                        
+                        <div className="overflow-x-auto w-full custom-scrollbar">
+                          <table className="w-full text-left border-collapse min-w-[800px] md:min-w-[1000px]">
+                            <thead>
+                              <tr className="bg-[#0b1121] text-slate-400 text-[9px] md:text-[10px] font-extrabold uppercase tracking-widest border-b border-[#1f2937]">
+                                <th className="p-3 md:p-4 w-[25%] pl-4 md:pl-6 whitespace-nowrap">Conta / Mês</th>
+                                <th className="p-3 md:p-4 text-right w-[15%] whitespace-nowrap">Real 2025 (YTD)</th>
+                                <th className="p-3 md:p-4 text-right w-[15%] text-blue-400 whitespace-nowrap">Orçado 2026 (YTD)</th>
+                                <th className="p-3 md:p-4 text-right w-[15%] text-cyan-400 whitespace-nowrap">Real 2026 (YTD)</th>
+                                <th className="p-3 md:p-4 text-center w-[12%] whitespace-nowrap">Status YTD</th>
+                                <th className="p-3 md:p-4 text-center w-[18%] pr-4 md:pr-6 whitespace-nowrap">Ações</th>
+                              </tr>
+                            </thead>
+                            <tbody className="text-xs md:text-sm">
+                              {accountStats.map((row, idx) => {
+                                const diffValue = row.real2026 - row.orcado2026;
+                                const diffPercent = row.orcado2026 > 0 ? (diffValue / row.orcado2026) * 100 : 0;
+                                const isOverBudget = diffValue > 0;
+                                const isExpanded = expandedAccounts[row.conta];
+
+                                return (
+                                  <Fragment key={idx}>
+                                    <tr className={`border-b border-[#1f2937] transition-all duration-200 ${isExpanded ? 'bg-[#161f30]' : 'bg-[#111827]'}`}>
+                                      <td className="p-3 md:p-4 pl-4 md:pl-6 font-semibold text-slate-300 flex items-center gap-2 md:gap-3 select-none">
+                                        <button onClick={(e) => { e.stopPropagation(); toggleAccountExpand(row.conta); }} className={`p-1.5 rounded transition-colors bg-[#0b1121] border border-[#334155] shadow-sm ${isExpanded ? 'text-cyan-400 border-cyan-500/50' : 'text-slate-400'}`}>
+                                          {isExpanded ? <MinusSquare size={12}/> : <PlusSquare size={12}/>}
+                                        </button>
+                                        <span className="truncate max-w-[150px] md:max-w-[250px] cursor-pointer text-[10px] md:text-xs text-cyan-400" onClick={() => setSelectedConta(row.conta)}>{row.conta}</span>
+                                      </td>
+                                      <td className="p-3 md:p-4 text-right text-slate-400">{formatCurrency(row.real2025)}</td>
+                                      <td className="p-3 md:p-4 text-right text-blue-400 font-bold bg-blue-900/10">{formatCurrency(row.orcado2026)}</td>
+                                      <td className="p-3 md:p-4 text-right text-cyan-400 font-bold bg-cyan-900/10">{formatCurrency(row.real2026)}</td>
+                                      <td className="p-3 md:p-4 text-center">
+                                        <span className={`inline-flex items-center justify-center min-w-[50px] md:min-w-[60px] py-1 rounded text-[9px] md:text-[11px] font-bold border ${isOverBudget ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                                          {isOverBudget ? '+' : ''}{diffPercent.toFixed(1)}%
+                                        </span>
+                                      </td>
+                                      <td className="p-3 md:p-4 text-center pr-4 md:pr-6 flex items-center justify-center gap-2">
+                                        <button onClick={() => setSelectedConta(row.conta)} className="p-2 bg-[#1e293b] text-cyan-400 rounded-lg hover:bg-cyan-500 hover:text-slate-900 transition-all" title="Abrir Matriz">
+                                          <Search size={14} />
+                                        </button>
+                                        <button onClick={() => setActiveThreadId(`CONTA-${row.conta}`)} className="p-2 bg-[#111827] text-slate-500 border border-[#334155] rounded-lg hover:bg-[#334155] hover:text-white transition-all" title="Abrir Chat">
+                                          <MessageSquare size={14} />
+                                        </button>
+                                      </td>
+                                    </tr>
+
+                                    {isExpanded && (
+                                      <tr className="bg-[#0a0f1c] border-b border-[#1f2937]">
+                                        <td colSpan="6" className="py-4 md:py-6 pl-4 md:pl-16 pr-4 md:pr-6 shadow-inner">
+                                          <div className="flex flex-nowrap overflow-x-auto gap-3 md:gap-4 w-full custom-scrollbar pb-4 hide-scroll-mobile">
+                                            {MONTHS_ORDER.map(m => {
+                                              const mData = row.meses[m];
+                                              if(mData.real2025 === 0 && mData.orcado2026 === 0 && mData.real2026 === 0) return null;
+                                              
+                                              const mDiffVal = mData.real2026 - mData.orcado2026;
+                                              const mDiffPct = mData.orcado2026 > 0 ? (mDiffVal / mData.orcado2026) * 100 : 0;
+                                              const mIsOverBudget = mDiffVal > 0;
+                                              const mStatusColor = mIsOverBudget ? 'text-red-400' : 'text-emerald-400';
+
+                                              return (
+                                                <div key={`${idx}-${m}`} className="min-w-[200px] md:min-w-[240px] shrink-0 bg-[#0f172a] border border-[#1e293b] rounded-xl p-3 md:p-4 flex flex-col gap-1.5 md:gap-2 shadow-lg hover:border-cyan-500/50 transition-all">
+                                                  <div className="flex items-center justify-between border-b border-[#1e293b] pb-1.5 md:pb-2 mb-1">
+                                                    <span className="text-xs md:text-sm font-extrabold text-slate-200 uppercase tracking-wider">{m.substring(0,3)}</span>
+                                                    <span className={`text-[9px] md:text-[11px] px-2 py-0.5 rounded-md bg-[#070b14] border border-transparent font-bold ${mStatusColor}`}>
+                                                      {mIsOverBudget ? '+' : ''}{mDiffPct.toFixed(1)}%
+                                                    </span>
+                                                  </div>
+                                                  <div className="flex justify-between items-center text-[10px] md:text-xs">
+                                                    <span className="text-slate-500 font-medium">Real '25</span>
+                                                    <span className="text-slate-300 font-semibold">{formatCurrency(mData.real2025)}</span>
+                                                  </div>
+                                                  <div className="flex justify-between items-center text-[10px] md:text-xs">
+                                                    <span className="text-blue-500/80 font-medium">Orç '26</span>
+                                                    <span className="text-blue-400 font-bold">{formatCurrency(mData.orcado2026)}</span>
+                                                  </div>
+                                                  <div className="flex justify-between items-center text-[10px] md:text-xs pt-1 mt-0.5 border-t border-[#1e293b]">
+                                                    <span className="text-cyan-500/80 font-medium">Real '26</span>
+                                                    <span className="font-extrabold text-cyan-400 text-xs md:text-sm">{formatCurrency(mData.real2026)}</span>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </Fragment>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'indicadores' && (
+                      <div className="space-y-6 md:space-y-8 relative animate-in fade-in zoom-in-95 duration-500">
+                        <div className="bg-[#111827] border border-[#1f2937] rounded-xl p-4 md:p-6 relative overflow-hidden shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                          <div className="absolute top-0 right-0 w-32 md:w-64 h-full bg-purple-500/10 blur-3xl pointer-events-none"></div>
+                          <div>
+                            <h2 className="text-sm md:text-lg font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                              <Zap className="text-purple-400" size={20}/> Resumo Operacional
+                            </h2>
+                            <p className="text-[10px] md:text-xs text-slate-400 mt-1">
+                              Valores em <b className="text-purple-300">Média Mensal</b> (YTD). Arraste lateralmente os cartões no celular.
+                            </p>
+                          </div>
+                        </div>
+
+                        {Object.keys(familySummary).sort().length === 0 && (
+                          <div className="bg-[#111827] border border-[#1f2937] rounded-xl p-8 text-center flex flex-col items-center shadow-lg">
+                            <Activity size={40} className="text-slate-600 mb-4" />
+                            <h3 className="text-sm md:text-base font-bold text-slate-300">Nenhum Dado Encontrado</h3>
+                          </div>
+                        )}
+
+                        {Object.keys(familySummary).sort().map(famName => {
+                           const famData = familySummary[famName];
+                           const hasFinance = (Math.abs(famData.financeiro.r25) > 0.001 || Math.abs(famData.financeiro.o26) > 0.001 || Math.abs(famData.financeiro.r26) > 0.001);
+                           
+                           const validIndicators = Object.keys(famData.indicadores).filter(indName => {
+                               const d = famData.indicadores[indName].total;
+                               return Math.abs(d.r25) > 0.001 || Math.abs(d.o26) > 0.001 || Math.abs(d.r26) > 0.001;
+                           });
+
+                           if (!hasFinance && validIndicators.length === 0) return null;
+
+                           let orderedItems = cardOrders[famName];
+                           if (!orderedItems) {
+                               orderedItems = [...validIndicators.sort()];
+                               if (hasFinance) orderedItems.unshift('CUSTO FINANCEIRO');
+                           } else {
+                               const currentValid = hasFinance ? ['CUSTO FINANCEIRO', ...validIndicators] : [...validIndicators];
+                               orderedItems = orderedItems.filter(i => currentValid.includes(i));
+                               currentValid.forEach(i => { if(!orderedItems.includes(i)) orderedItems.push(i) });
+                           }
+                           
+                           return (
+                              <div key={famName} className="bg-[#0f172a]/80 border border-[#1e293b] rounded-xl p-4 md:p-6 shadow-lg backdrop-blur-sm">
+                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#1e293b] pb-3 mb-4 md:mb-6 gap-3">
+                                   <h3 className="text-base md:text-xl font-black text-white flex items-center gap-2 md:gap-3">
+                                     <FamilyIcon family={famName} size={20} className="text-purple-400" /> {famName}
+                                   </h3>
+                                   <button onClick={() => setActiveThreadId(`FAMILIA-${famName}`)} className="w-full sm:w-auto flex items-center justify-center gap-2 text-[10px] uppercase font-bold text-slate-400 hover:text-purple-400 bg-[#111827] px-3 py-2 md:py-1.5 rounded-lg border border-[#1f2937] hover:border-purple-500/50 transition-colors">
+                                     <MessageSquare size={14}/> Notas
+                                   </button>
+                                 </div>
+                                 
+                                 <div className="flex flex-nowrap overflow-x-auto gap-4 md:gap-6 pb-2 custom-scrollbar hide-scroll-mobile">
+                                    {orderedItems.map((itemKey) => {
+                                       const isFin = itemKey === 'CUSTO FINANCEIRO';
+                                       const dataObj = isFin ? famData.financeiro : famData.indicadores[itemKey].total;
+                                       const formatFn = isFin ? formatCurrency : formatNumber;
+
+                                       return (
+                                          <IndicadorCard 
+                                            key={itemKey} 
+                                            title={itemKey} 
+                                            data={dataObj} 
+                                            formatData={formatFn}
+                                            numMonths={numActiveMonths}
+                                            isFinanceiro={isFin}
+                                            onClick={() => setSelectedIndicadorModal({ familia: famName, indicador: itemKey, isFinanceiro: isFin })}
+                                            onDragStart={(e) => { e.dataTransfer.setData("cardKey", itemKey); }}
+                                            onDrop={(e) => handleDropIndicator(famName, e.dataTransfer.getData("cardKey"), itemKey)}
+                                            onTouchStart={(e) => handleTouchStartNote(e, itemKey)}
+                                            onTouchMove={handleTouchMoveNote}
+                                            onTouchEnd={handleTouchEndNote}
+                                            onThreadOpen={(e) => { e.stopPropagation(); setActiveThreadId(`IND-${famName}-${itemKey}`); }}
+                                          />
+                                       );
+                                    })}
+                                 </div>
+                              </div>
+                           );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'mural' && (
+                  <div className="absolute inset-0 z-10 pt-20 overflow-hidden mural-bg">
+                      {muralNotes.length === 0 && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40 px-6">
+                             <LayoutDashboard size={60} className="text-cyan-500 mb-4" />
+                             <h2 className="text-xl md:text-2xl font-bold text-slate-300 text-center">Mural Colaborativo Vazio</h2>
+                             <p className="text-xs md:text-sm text-slate-400 mt-2 max-w-md text-center">Nenhum comentário foi destacado. Vá nas discussões e use o Alfinete.</p>
+                          </div>
+                      )}
+                      
+                      {muralNotes.map(note => (
+                          <div key={note.id}
+                               draggable="true"
+                               onDragStart={(e) => {
+                                   e.dataTransfer.setData('noteId', note.id.toString());
+                               }}
+                               className="absolute w-[260px] md:w-[280px] bg-[#111827]/95 backdrop-blur-xl border border-cyan-500/30 rounded-xl p-3 md:p-4 shadow-[0_10px_40px_rgba(6,182,212,0.15)] z-20 flex flex-col"
+                               style={{ left: Math.max(0, note.x) + 'px', top: Math.max(0, note.y) + 'px' }}
+                          >
+                              <div className="flex justify-between items-start mb-2 border-b border-[#1f2937] pb-2">
+                                  <div>
+                                      <span className="text-[10px] font-bold text-cyan-400 flex items-center gap-1"><User size={10}/> {note.user}</span>
+                                      <span className="text-[9px] text-slate-500">{note.threadId.replace(/-/g, ' ')} • {note.time}</span>
+                                  </div>
+                                  <button onClick={() => handleRemoveMuralNote(note.id)} className="text-slate-500 hover:text-red-400 p-1"><X size={14}/></button>
+                              </div>
+                              <p className="text-xs text-slate-200 leading-relaxed mb-3">{note.text}</p>
+                              
+                              {note.replies && note.replies.length > 0 && (
+                                <div className="flex-1 overflow-y-auto max-h-24 pr-1 custom-scrollbar space-y-2 mb-2">
+                                    {note.replies.map((r, i) => (
+                                        <div key={i} className="bg-[#0f172a] rounded p-2 border border-[#1e293b]">
+                                            <div className="flex justify-between items-center mb-1">
+                                                <span className="text-[9px] font-bold text-purple-400">{r.user}</span>
+                                                <span className="text-[8px] text-slate-500">{r.time}</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-300">{r.text}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                              )}
+                              <form onSubmit={(e) => {
+                                  e.preventDefault();
+                                  const val = e.target.reply.value.trim();
+                                  if(!val) return;
+                                  handleAddMuralReply(note.id, val);
+                                  e.target.reset();
+                              }} className="mt-auto">
+                                  <div className="relative">
+                                      <input name="reply" type="text" placeholder="Responder..." className="w-full bg-[#070b14] border border-[#1e293b] rounded pl-2 pr-6 py-1.5 text-[10px] text-white focus:outline-none focus:border-cyan-500" autoComplete="off" />
+                                      <button type="submit" className="absolute right-1.5 top-1.5 text-slate-500 hover:text-cyan-400"><Send size={10}/></button>
+                                  </div>
+                              </form>
+                          </div>
+                      ))}
+                  </div>
+                )}
+              </main>
+
+              {activeThreadId && (
+                 <div className="fixed inset-0 md:relative w-full md:w-80 bg-[#0c1222] border-l border-[#1e293b] flex flex-col h-full shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-[70] animate-in slide-in-from-right duration-300">
+                    <div className="h-16 md:h-20 border-b border-[#1e293b] flex items-center justify-between px-5 bg-[#0f172a] shrink-0">
+                       <div>
+                         <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2"><MessageSquare size={14}/> Discussão</h3>
+                         <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[200px]" title={activeThreadId}>{activeThreadId.replace(/-/g, ' ')}</p>
+                       </div>
+                       <button onClick={() => setActiveThreadId(null)} className="p-2 bg-[#1e293b] rounded-lg text-slate-400 hover:text-white transition-colors"><X size={18}/></button>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar bg-[#070b14]">
+                       {(!comments[activeThreadId] || comments[activeThreadId].length === 0) ? (
+                          <div className="text-center text-slate-500 text-xs mt-10">Nenhum comentário.<br/>Seja o primeiro a justificar.</div>
+                       ) : (
+                          comments[activeThreadId].map((c, i) => (
+                             <div key={i} className="bg-[#111827] border border-[#1f2937] p-3 rounded-lg relative group">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className="text-[10px] font-bold text-cyan-400 flex items-center gap-1"><User size={10}/> {c.user}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[9px] text-slate-500">{c.time}</span>
+                                    <button onClick={() => handlePinComment(c, activeThreadId)} className="text-slate-600 hover:text-cyan-400 md:opacity-0 md:group-hover:opacity-100 transition-opacity" title="Destacar no Mural">
+                                      <Pin size={12}/>
+                                    </button>
+                                  </div>
+                                </div>
+                                <p className="text-xs text-slate-300 leading-relaxed">{c.text}</p>
+                             </div>
+                          ))
+                       )}
+                    </div>
+
+                    <div className="p-4 bg-[#0f172a] border-t border-[#1e293b] shrink-0 mb-16 md:mb-0">
+                       {!currentUserName ? (
+                          <form onSubmit={(e) => { e.preventDefault(); setCurrentUserName(e.target.username.value.trim()); }}>
+                             <label className="text-[10px] text-slate-400 mb-1 block uppercase tracking-wider font-bold">Identifique-se</label>
+                             <div className="relative">
+                               <input name="username" type="text" placeholder="Seu nome..." className="w-full bg-[#070b14] border border-[#1e293b] rounded-lg pl-3 pr-10 py-3 text-xs text-white focus:outline-none focus:border-cyan-500" required autoComplete="off" />
+                               <button type="submit" className="absolute right-2 top-3 text-cyan-500 hover:text-cyan-400 font-bold text-xs">Entrar</button>
+                             </div>
+                          </form>
+                       ) : (
+                          <form onSubmit={handleAddComment}>
+                            <div className="relative">
+                              <input name="msg" type="text" placeholder="Escreva uma mensagem..." className="w-full bg-[#070b14] border border-[#1e293b] rounded-lg pl-3 pr-10 py-3 text-xs text-white focus:outline-none focus:border-cyan-500" autoComplete="off" />
+                              <button type="submit" className="absolute right-2 top-3 text-slate-500 hover:text-cyan-400"><Send size={18}/></button>
+                            </div>
+                          </form>
+                       )}
+                    </div>
+                 </div>
+              )}
+
+              {selectedConta && (
+                <AccountDetailModal 
+                  conta={selectedConta} 
+                  fullData={filteredData} 
+                  indicadoresData={indicadoresData}
+                  onClose={() => setSelectedConta(null)} 
+                  formatCurrency={formatCurrency}
+                  formatNumber={formatNumber}
+                  MONTHS_ORDER={MONTHS_ORDER}
+                  activeMonths2026={activeMonths2026}
+                  onOpenThread={(id) => setActiveThreadId(id)}
+                />
+              )}
+
+              {selectedIndicadorModal && (
+                <IndicadorDetailModal
+                  config={selectedIndicadorModal}
+                  fullData={filteredData}
+                  indicadoresData={indicadoresData}
+                  onClose={() => setSelectedIndicadorModal(null)}
+                  formatNumber={formatNumber}
+                  formatCurrency={formatCurrency}
+                  MONTHS_ORDER={MONTHS_ORDER}
+                  activeMonths2026={activeMonths2026}
+                  onOpenThread={(id) => setActiveThreadId(id)}
+                />
+              )}
+            </div>
+          );
+        }
+
+        function NavItem({ icon, active, onClick, tooltip }) {
+          return (
+            <div onClick={onClick} className={`flex-1 md:w-full flex justify-center py-4 md:py-3 md:border-r-4 border-t-4 md:border-t-0 cursor-pointer transition-all duration-200 group ${active ? 'border-cyan-400 md:bg-[#162032]' : 'border-transparent md:hover:bg-[#162032]'}`} title={tooltip}>
+              <div className={`${active ? 'text-cyan-400' : 'text-slate-500 md:group-hover:text-cyan-300'}`}>{icon}</div>
+            </div>
+          );
+        }
+
+        function DarkKPICard({ title, value, color, pct }) {
+          const colors = {
+            cyan: 'bg-[#111827] border-[#1f2937] hover:border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.1)]',
+            purple: 'bg-[#111827] border-[#1f2937] hover:border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.1)]',
+            blue: 'bg-[#111827] border-[#1f2937] hover:border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.1)]'
+          };
+          const lines = { cyan: 'bg-cyan-500', purple: 'bg-purple-500', blue: 'bg-blue-500' };
+          
+          return (
+            <div className={`border rounded-xl p-4 md:p-5 relative overflow-hidden flex flex-col justify-between group transition-all ${colors[color]}`}>
+              <div className={`absolute top-0 left-0 w-1 h-full ${lines[color]}`}></div>
+              <div className="pl-2">
+                <h3 className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">{title}</h3>
+                {/* ALTERADO: Fonte fluida com proteção de quebra */}
+                <div className="text-xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight text-slate-100 whitespace-nowrap">{value}</div>
+                {pct !== null && (
+                  <div className="mt-3 md:mt-4">
+                     <div className="flex justify-between text-[9px] md:text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
+                       <span>Consumo Orçamento YTD</span>
+                       <span className="text-slate-300">{pct.toFixed(1)}%</span>
+                     </div>
+                     <div className="h-1.5 w-full bg-[#1f2937] rounded-full overflow-hidden">
+                       <div className={`h-full ${pct > 100 ? 'bg-red-500' : 'bg-cyan-400'} transition-all`} style={{ width: `${Math.min(pct, 100)}%` }}></div>
+                     </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        function IndicadorCard({ title, data, formatData, numMonths, onClick, isFinanceiro = false, onDragStart, onDrop, onTouchStart, onTouchMove, onTouchEnd, onThreadOpen }) {
+            const avgR25 = data.r25 / numMonths;
+            const avgO26 = data.o26 / numMonths;
+            const avgR26 = data.r26 / numMonths;
+            
+            const diffVal = avgR26 - avgO26;
+            const diffPct = avgO26 > 0 ? (diffVal / avgO26) * 100 : 0;
+            const isOver = diffVal > 0;
+            const statusColor = isOver ? 'text-red-400 border-red-500/20 bg-red-500/10' : 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10';
+
+            const borderColorHover = isFinanceiro ? 'md:hover:border-cyan-500/50' : 'md:hover:border-purple-500/50';
+            const borderAccent = 'border-[#1e293b]';
+            const textAccent = isFinanceiro ? 'text-cyan-400' : 'text-purple-400';
+
+            return (
+                <div 
+                  draggable="true"
+                  onDragStart={onDragStart}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={onDrop}
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                  onClick={onClick} 
+                  className={`min-w-[240px] w-[260px] shrink-0 bg-[#111827] border border-[#1f2937] rounded-xl p-4 cursor-pointer ${borderColorHover} transition-all group relative overflow-hidden`}
+                >
+                    <div className={`absolute top-0 left-0 w-1 h-full ${isFinanceiro ? 'bg-cyan-500' : 'bg-purple-500'}`}></div>
+                    
+                    <div className="absolute top-2 right-2 flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                       <button onClick={onThreadOpen} className="p-1 md:p-1.5 bg-[#1e293b] rounded text-slate-400 hover:text-white"><MessageSquare size={12}/></button>
+                       <div className="hidden md:block p-1.5 cursor-grab text-slate-500 hover:text-white"><GripHorizontal size={14}/></div>
+                    </div>
+
+                    <div className="pl-2">
+                        <div className={`flex justify-between items-start mb-3 md:mb-4 border-b ${borderAccent} pb-2 md:pb-3 pr-10 md:group-hover:border-slate-600 transition-colors`}>
+                            <h3 className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest leading-snug">MÉDIA YTD <br/><span className={`${textAccent} text-sm md:text-base font-extrabold`}>{title}</span></h3>
+                            <span className={`text-[9px] md:text-[10px] font-bold px-2 py-0.5 rounded border ${statusColor}`}>
+                                {isOver ? '+' : ''}{diffPct.toFixed(1)}%
+                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center text-[10px] md:text-xs">
+                                <span className="text-slate-500 font-medium">Real '25</span>
+                                <span className="text-slate-300">{formatData(avgR25)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-[10px] md:text-xs">
+                                <span className={`${isFinanceiro ? 'text-blue-400' : 'text-purple-400/80'} font-medium`}>Orç '26</span>
+                                <span className={`${isFinanceiro ? 'text-blue-400' : 'text-purple-400'} font-bold`}>{formatData(avgO26)}</span>
+                            </div>
+                            <div className={`flex justify-between items-center text-[10px] md:text-xs pt-1.5 md:pt-2 border-t ${borderAccent} md:group-hover:border-slate-600 transition-colors`}>
+                                <span className={`${isFinanceiro ? 'text-cyan-400' : 'text-fuchsia-400'} font-medium`}>Real '26</span>
+                                <span className={`${isFinanceiro ? 'text-cyan-400' : 'text-fuchsia-400'} font-extrabold text-xs md:text-sm`}>{formatData(avgR26)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function NeonLineChart({ data, formatData, activeMonths = [], isPurple = false }) {
+          const [hoveredIndex, setHoveredIndex] = useState(null);
+          if (!data || data.length === 0) return <div className="h-full flex items-center justify-center text-slate-500 font-medium">Sem dados no período</div>;
+          
+          const allVals = [];
+          data.forEach(d => {
+            if (d.real2025 > 0) allVals.push(d.real2025);
+            if (d.orcado2026 > 0) allVals.push(d.orcado2026);
+            if (d.real2026 > 0 && (activeMonths.length === 0 || activeMonths.includes(d.label))) allVals.push(d.real2026);
+          });
+
+          let minVal = 0; let maxVal = 100;
+          if (allVals.length > 0) {
+            minVal = Math.min(...allVals);
+            maxVal = Math.max(...allVals);
+            const diff = maxVal - minVal;
+            if (diff === 0) {
+              minVal = minVal * 0.8; maxVal = maxVal * 1.2;
+            } else {
+              minVal = Math.max(0, minVal - diff * 0.15); maxVal = maxVal + diff * 0.15; 
+            }
+          }
+          if(minVal === maxVal) { maxVal = minVal + 10; }
+
+          const width = 1000; const height = 300; const paddingX = 40; const paddingY = 30;
+          const usableW = width - paddingX * 2; const usableH = height - paddingY * 2;
+          
+          const getX = (index) => {
+            if (data.length === 1) return paddingX + usableW / 2;
+            return paddingX + (index * (usableW / (data.length - 1)));
+          };
+          
+          const range = maxVal - minVal || 1;
+          const getY = (val) => height - paddingY - ((val - minVal) / range) * usableH;
+
+          const pathR25 = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.real2025)}`).join(' ');
+          const pathO26 = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.orcado2026)}`).join(' ');
+          
+          let cmdsR26 = [];
+          let firstR26 = true;
+          data.forEach((d, i) => {
+            if (activeMonths.length === 0 || activeMonths.includes(d.label)) {
+              cmdsR26.push(`${firstR26 ? 'M' : 'L'} ${getX(i)} ${getY(d.real2026)}`);
+              firstR26 = false;
+            }
+          });
+          const pathR26 = cmdsR26.join(' ');
+
+          const accentColor = isPurple ? '#a855f7' : '#22d3ee'; 
+
+          return (
+            <div className="relative w-full h-full pt-2">
+              <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                {[0, 1, 2, 3].map(i => {
+                  const val = maxVal - (i * (range / 3));
+                  return (
+                    <g key={i}>
+                      <line x1={paddingX} y1={paddingY + (i * (usableH / 3))} x2={width - paddingX} y2={paddingY + (i * (usableH / 3))} stroke="#1f2937" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
+                      <text x={paddingX - 10} y={paddingY + (i * (usableH / 3)) + 4} textAnchor="end" className="fill-slate-500 text-[10px] font-medium">{val > 0 ? (val > 1000 ? (val/1000).toFixed(0)+'k' : val.toFixed(0)) : '0'}</text>
+                    </g>
+                  );
+                })}
+                <path d={pathR25} fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.6" vectorEffect="non-scaling-stroke" />
+                <path d={pathO26} fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                {pathR26 && <path d={pathR26} fill="none" stroke={accentColor} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />}
+
+                {data.map((d, i) => {
+                  const x = getX(i); const isHovered = hoveredIndex === i;
+                  const showR26 = activeMonths.length === 0 || activeMonths.includes(d.label);
+                  return (
+                    <g key={i} onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)} className="cursor-crosshair">
+                      <text x={x} y={height - 5} textAnchor="middle" className={`text-[10px] uppercase font-bold transition-colors ${isHovered ? (isPurple ? 'fill-purple-400' : 'fill-cyan-400') : 'fill-slate-500'}`}>{d.label.substring(0, 3)}</text>
+                      {isHovered && <line x1={x} y1={paddingY} x2={x} y2={height - paddingY} stroke="#475569" strokeWidth="1" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />}
+                      <circle cx={x} cy={getY(d.real2025)} r={isHovered ? 6 : 3} fill={isHovered ? "#f1f5f9" : "#64748b"} />
+                      <circle cx={x} cy={getY(d.orcado2026)} r={isHovered ? 7 : 4} fill={isHovered ? "#eff6ff" : "#3b82f6"} />
+                      {showR26 && <circle cx={x} cy={getY(d.real2026)} r={isHovered ? 7 : 4} fill={isHovered ? "#fff" : accentColor} />}
+                      <rect x={x - (usableW / Math.max(1, data.length) / 2)} y={0} width={usableW / Math.max(1, data.length)} height={height} fill="transparent" />
+                    </g>
+                  );
+                })}
+              </svg>
+              {hoveredIndex !== null && (
+                <div className="absolute z-20 bg-[#0f172a]/95 backdrop-blur-md text-white p-3 md:p-4 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] border border-[#1e293b] pointer-events-none transform -translate-x-1/2 -translate-y-full mb-4 w-48 md:w-56"
+                  style={{ left: data.length === 1 ? '50%' : `calc(${(hoveredIndex * (100 / (data.length - 1)))}% * ${usableW/width} + ${(paddingX/width)*100}%)`, top: '30%' }}>
+                  <div className="font-bold text-[10px] md:text-xs mb-2 md:mb-3 text-center uppercase tracking-widest text-slate-300">{data[hoveredIndex].label}</div>
+                  <div className="flex flex-col gap-1.5 md:gap-2">
+                    <div className="flex items-center justify-between gap-4 text-[9px] md:text-xs">
+                      <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-500"></div>Real '25</span>
+                      <span className="font-medium text-slate-300">{formatData(data[hoveredIndex].real2025)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 text-[9px] md:text-xs">
+                      <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500"></div>Orçado '26</span>
+                      <span className="font-bold text-blue-400">{formatData(data[hoveredIndex].orcado2026)}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-4 text-[9px] md:text-xs pt-1.5 border-t border-[#1e293b]">
+                      <span className="flex items-center gap-2"><div className={`w-2 h-2 rounded-full ${isPurple ? 'bg-purple-400' : 'bg-cyan-400'}`}></div>Real '26</span>
+                      <span className={`font-extrabold ${isPurple ? 'text-purple-300' : 'text-cyan-300'}`}>
+                        {(activeMonths.length === 0 || activeMonths.includes(data[hoveredIndex].label)) ? formatData(data[hoveredIndex].real2026) : '-'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        function IndicadorDetailModal({ config, fullData, indicadoresData, onClose, formatNumber, formatCurrency, MONTHS_ORDER, activeMonths2026, onOpenThread }) {
+          const { familia, indicador, isFinanceiro } = config;
+          
+          const dataToUse = useMemo(() => {
+              if (isFinanceiro) return fullData.filter(d => d.familia === familia);
+              return indicadoresData.filter(d => d.familia === familia && d.indicador === indicador);
+          }, [fullData, indicadoresData, familia, indicador, isFinanceiro]);
+          
+          const formatData = isFinanceiro ? formatCurrency : formatNumber;
+          const accentTextColor = isFinanceiro ? 'text-cyan-400' : 'text-purple-400';
+
+          const chartStats = useMemo(() => {
+              const stats = {};
+              MONTHS_ORDER.forEach(m => { stats[m] = { label: m, real2025: 0, orcado2026: 0, real2026: 0 }; });
+              dataToUse.forEach(item => {
+                  const m = item.mes.toUpperCase();
+                  if (item.ano === 2025 && item.tipo === 'REALIZADO') stats[m].real2025 += item.valor;
+                  else if (item.ano === 2026 && item.tipo === 'ORÇADO') stats[m].orcado2026 += item.valor;
+                  else if (item.ano === 2026 && item.tipo === 'REALIZADO') stats[m].real2026 += item.valor;
+              });
+              return Object.values(stats);
+          }, [dataToUse]);
+
+          const tableStats = useMemo(() => {
+              const stats = {};
+              dataToUse.forEach(item => {
+                  const mod = item.modelo || 'Sem Modelo';
+                  if (!stats[mod]) {
+                      stats[mod] = { label: mod, total: { real2025: 0, orcado2026: 0, real2026: 0 }, meses: {} };
+                      MONTHS_ORDER.forEach(m => stats[mod].meses[m] = { real2025: 0, orcado2026: 0, real2026: 0 });
+                  }
+                  
+                  const val = item.valor;
+                  const m = item.mes.toUpperCase();
+                  const isActive = activeMonths2026.length === 0 || activeMonths2026.includes(m);
+                  
+                  if (item.ano === 2025 && item.tipo === 'REALIZADO') { 
+                    if (isActive) stats[mod].total.real2025 += val; 
+                    stats[mod].meses[m].real2025 += val; 
+                  } 
+                  else if (item.ano === 2026 && item.tipo === 'ORÇADO') { 
+                    if (isActive) stats[mod].total.orcado2026 += val; 
+                    stats[mod].meses[m].orcado2026 += val; 
+                  } 
+                  else if (item.ano === 2026 && item.tipo === 'REALIZADO') { 
+                    stats[mod].total.real2026 += val; 
+                    stats[mod].meses[m].real2026 += val; 
+                  }
+              });
+              return Object.values(stats).sort((a,b) => b.total.orcado2026 - a.total.orcado2026);
+          }, [dataToUse, activeMonths2026]);
+
+          const [expandedModels, setExpandedModels] = useState({});
+          const toggleModel = (id) => setExpandedModels(prev => ({ ...prev, [id]: !prev[id] }));
+
+          return (
+            <div className="fixed inset-0 z-[70] flex items-end md:items-center justify-center bg-black/80 md:p-4 backdrop-blur-sm">
+              <div className="bg-[#0b1121] rounded-t-2xl md:rounded-2xl shadow-[0_-10px_40px_rgba(0,0,0,1)] border border-[#1f2937] w-full md:max-w-5xl max-h-[90vh] md:max-h-[95vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 md:zoom-in-95 duration-300">
+                
+                <div className="bg-[#0f172a] p-4 md:p-6 flex justify-between items-start sticky top-0 z-10 text-white border-b border-[#1f2937]">
+                  <div>
+                    <span className={`text-[10px] font-bold ${accentTextColor} uppercase tracking-widest mb-1 flex items-center gap-2`}>
+                      <FamilyIcon family={familia} size={14}/> Família: {familia}
+                    </span>
+                    <h2 className="text-base md:text-xl font-bold tracking-wider text-slate-100 flex flex-wrap items-center gap-2 md:gap-4">
+                      {indicador} (YTD)
+                      <button onClick={() => onOpenThread(`MODAL-${familia}-${indicador}`)} className="text-[9px] md:text-[10px] uppercase bg-[#111827] border border-[#1f2937] hover:border-slate-500 text-slate-400 hover:text-white px-2 py-1 rounded flex items-center gap-1.5 transition-all">
+                        <MessageSquare size={12}/> Discutir
+                      </button>
+                    </h2>
+                  </div>
+                  <button onClick={onClose} className="p-1.5 md:p-2 bg-[#1e293b] rounded-lg text-slate-400 hover:text-red-400 transition-all">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#040814] custom-scrollbar hide-scroll-mobile">
+                  
+                  <div className="bg-[#111827] border border-[#1f2937] rounded-xl p-4 md:p-6 mb-6">
+                    <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-2">Evolução Mensal</h3>
+                    <div className="h-[200px] md:h-[250px] w-full">
+                      <NeonLineChart data={chartStats} formatData={formatData} activeMonths={activeMonths2026} isPurple={!isFinanceiro} />
+                    </div>
+                  </div>
+
+                  <div className="border border-[#1f2937] rounded-xl overflow-x-auto bg-[#0b1121] custom-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[700px]">
+                      <thead>
+                        <tr className="bg-[#0f172a] text-slate-400 text-[9px] md:text-[10px] font-extrabold uppercase tracking-widest border-b border-[#1f2937]">
+                          <th className="p-3 md:p-5 w-[30%] pl-4 md:pl-6 whitespace-nowrap">Modelo</th>
+                          <th className="p-3 md:p-5 text-right w-[15%] whitespace-nowrap">Real '25</th>
+                          <th className="p-3 md:p-5 text-right w-[15%] text-blue-400 whitespace-nowrap">Orçado '26</th>
+                          <th className={`p-3 md:p-5 text-right w-[15%] ${isFinanceiro ? 'text-cyan-400' : 'text-purple-400'} whitespace-nowrap`}>Real '26</th>
+                          <th className="p-3 md:p-5 text-center w-[15%] pr-4 md:pr-6 whitespace-nowrap">Status YTD</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-xs md:text-sm">
+                        {tableStats.map((mod, idx) => {
+                          const isModExp = expandedModels[mod.label];
+                          const diffValue = mod.total.real2026 - mod.total.orcado2026;
+                          const diffPercent = mod.total.orcado2026 > 0 ? (diffValue / mod.total.orcado2026) * 100 : 0;
+                          const isOver = diffValue > 0;
+
+                          return (
+                            <Fragment key={idx}>
+                              <tr onClick={() => toggleModel(mod.label)} className={`border-b border-[#1f2937] transition-all duration-200 cursor-pointer ${isModExp ? 'bg-[#162032]' : 'bg-[#111827] hover:bg-[#162032]'}`}>
+                                <td className={`p-3 md:p-4 pl-4 md:pl-6 font-bold text-slate-300 flex items-center gap-2 md:gap-3 text-xs md:text-sm ${isModExp ? accentTextColor : ''}`}>
+                                  <span className={`bg-[#0f172a] border border-[#1f2937] shadow-sm rounded p-0.5 ${accentTextColor}`}>{isModExp ? <MinusSquare size={14}/> : <PlusSquare size={14}/>}</span>
+                                  <span className="truncate max-w-[120px] md:max-w-[200px]">{mod.label}</span>
+                                </td>
+                                <td className="p-3 md:p-4 text-right text-slate-400">{formatData(mod.total.real2025)}</td>
+                                <td className="p-3 md:p-4 text-right text-blue-400/80 font-bold">{formatData(mod.total.orcado2026)}</td>
+                                <td className={`p-3 md:p-4 text-right font-extrabold ${isFinanceiro ? 'text-cyan-400' : 'text-purple-400'}`}>{formatData(mod.total.real2026)}</td>
+                                <td className="p-3 md:p-4 text-center text-[10px] md:text-[11px] font-bold pr-4 md:pr-6">
+                                  <span className={`px-2 py-1 rounded border ${isOver ? 'text-red-400 bg-red-500/10 border-red-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'}`}>{isOver ? '+' : ''}{diffPercent.toFixed(1)}%</span>
+                                </td>
+                              </tr>
+                              
+                              {isModExp && (
+                                <tr className="bg-[#070b14] border-b border-[#1f2937]">
+                                  <td colSpan="5" className="py-4 md:py-6 pl-4 md:pl-[4.5rem] pr-4 md:pr-6">
+                                    <div className="flex flex-nowrap overflow-x-auto gap-3 md:gap-4 w-full custom-scrollbar pb-2 hide-scroll-mobile">
+                                      {MONTHS_ORDER.map(m => {
+                                        const mData = mod.meses[m];
+                                        if(mData.real2025 === 0 && mData.orcado2026 === 0 && mData.real2026 === 0) return null;
+                                        
+                                        const mDiffVal = mData.real2026 - mData.orcado2026;
+                                        const mDiffPct = mData.orcado2026 > 0 ? (mDiffVal / mData.orcado2026) * 100 : 0;
+                                        const mIsOverBudget = mDiffVal > 0;
+                                        const mStatusColor = mIsOverBudget ? 'text-red-400' : 'text-emerald-400';
+
+                                        return (
+                                          <div key={m} className={`min-w-[200px] md:min-w-[240px] shrink-0 bg-[#0f172a] border border-[#1e293b] rounded-xl p-3 md:p-4 flex flex-col gap-1.5 md:gap-2 shadow-lg transition-all`}>
+                                            <div className="flex items-center justify-between border-b border-[#1e293b] pb-1.5 md:pb-2 mb-1">
+                                              <span className="text-xs md:text-sm font-extrabold text-slate-200 uppercase tracking-wider">{m.substring(0,3)}</span>
+                                              <span className={`text-[9px] md:text-[11px] px-2 py-0.5 rounded-md bg-[#070b14] border border-transparent font-bold ${mStatusColor}`}>
+                                                {mIsOverBudget ? '+' : ''}{mDiffPct.toFixed(1)}%
+                                              </span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-[10px] md:text-xs">
+                                              <span className="text-slate-500 font-medium">Real '25</span>
+                                              <span className="text-slate-300 font-semibold">{formatData(mData.real2025)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-[10px] md:text-xs">
+                                              <span className="text-blue-500/80 font-medium">Orç '26</span>
+                                              <span className="text-blue-400 font-bold">{formatData(mData.orcado2026)}</span>
+                                            </div>
+                                            <div className={`flex justify-between items-center text-[10px] md:text-xs pt-1 mt-0.5 border-t border-[#1e293b]`}>
+                                              <span className={`${isFinanceiro ? 'text-cyan-400/80' : 'text-purple-400/80'} font-medium`}>Real '26</span>
+                                              <span className={`font-extrabold text-xs md:text-sm ${isFinanceiro ? 'text-cyan-400' : 'text-purple-400'}`}>{formatData(mData.real2026)}</span>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        function AccountDetailModal({ conta, fullData, indicadoresData, onClose, formatCurrency, formatNumber, MONTHS_ORDER, activeMonths2026, onOpenThread }) {
+          const newStatsObj = () => ({ real2025: 0, orcado2026: 0, real2026: 0 });
+          const newMesesObj = () => { const m = {}; MONTHS_ORDER.forEach(mes => m[mes] = newStatsObj()); return m; };
+
+          const familyHierarchy = useMemo(() => {
+            const stats = {};
+            const accountData = fullData.filter(d => d.contaContabil === conta);
+
+            accountData.forEach(item => {
+              const fam = item.familia || 'Sem Família';
+              const mod = item.modelo || 'Sem Modelo';
+              if (!stats[fam]) stats[fam] = { label: fam, financeiroTotal: newStatsObj(), modelos: {} };
+              if (!stats[fam].modelos[mod]) {
+                stats[fam].modelos[mod] = { label: mod, financeiro: { total: newStatsObj(), meses: newMesesObj() }, indicadores: {} };
+              }
+
+              const val = item.valor;
+              const m = item.mes.toUpperCase();
+              const isActive = activeMonths2026.length === 0 || activeMonths2026.includes(m);
+              const tTot = stats[fam].modelos[mod].financeiro.total;
+              const tMes = stats[fam].modelos[mod].financeiro.meses[m];
+
+              if (tMes) {
+                if (item.ano === 2025 && item.tipo === 'REALIZADO') { 
+                  if (isActive) tTot.real2025 += val; 
+                  tMes.real2025 += val; 
+                } 
+                else if (item.ano === 2026 && item.tipo === 'ORÇADO') { 
+                  if (isActive) tTot.orcado2026 += val; 
+                  tMes.orcado2026 += val; 
+                } 
+                else if (item.ano === 2026 && item.tipo === 'REALIZADO') { 
+                  tTot.real2026 += val; 
+                  tMes.real2026 += val; 
+                }
+              }
+            });
+
+            Object.values(stats).forEach(fam => {
+              Object.values(fam.modelos).forEach(mod => {
+                ['real2025', 'orcado2026', 'real2026'].forEach(k => {
+                  fam.financeiroTotal[k] += mod.financeiro.total[k];
+                });
+              });
+              fam.modelosList = Object.values(fam.modelos).sort((a,b) => b.financeiro.total.orcado2026 - a.financeiro.total.orcado2026);
+            });
+
+            return Object.values(stats).sort((a,b) => b.financeiroTotal.orcado2026 - a.financeiroTotal.orcado2026);
+          }, [fullData, conta, indicadoresData, activeMonths2026]);
+
+          const [expandedNodes, setExpandedNodes] = useState({});
+          const toggleNode = (nodeId) => setExpandedNodes(prev => ({ ...prev, [nodeId]: !prev[nodeId] }));
+
+          const renderMetricRow = (title, dataObj, nodeId, formatter, isBadIfPositive = true, colorClass = "text-cyan-400") => {
+            const isExp = expandedNodes[nodeId];
+            const diffVal = dataObj.total.real2026 - dataObj.total.orcado2026;
+            const diffPct = dataObj.total.orcado2026 > 0 ? (diffVal / dataObj.total.orcado2026) * 100 : 0;
+            const isOver = diffVal > 0;
+            
+            const statusColor = (isOver && isBadIfPositive) || (!isOver && !isBadIfPositive) ? 'text-red-400 bg-red-500/10 border-red-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+
+            let hasAnyData = false;
+            MONTHS_ORDER.forEach(m => {
+              if (Math.abs(dataObj.meses[m].real2025) >= 0.001 || Math.abs(dataObj.meses[m].orcado2026) >= 0.001 || Math.abs(dataObj.meses[m].real2026) >= 0.001) {
+                hasAnyData = true;
+              }
+            });
+            if (!hasAnyData) return null;
+
+            return (
+              <Fragment key={nodeId}>
+                <tr onClick={() => toggleNode(nodeId)} className={`border-b border-[#1f2937] cursor-pointer group transition-all ${isExp ? 'bg-[#162032]' : 'bg-[#111827] hover:bg-[#162032]'}`}>
+                  <td className="p-3 md:p-4 pl-10 md:pl-16 font-semibold text-slate-300 flex items-center gap-2 md:gap-3 text-[10px] md:text-xs group-hover:text-cyan-400">
+                    <span className="text-cyan-500 bg-[#0f172a] rounded border border-[#1f2937] p-0.5 shadow-sm">{isExp ? <MinusSquare size={12}/> : <PlusSquare size={12}/>}</span>
+                    <span className="truncate max-w-[100px] md:max-w-auto">{title}</span>
+                  </td>
+                  <td className="p-3 md:p-4 text-right text-slate-500 text-[10px] md:text-xs">{formatter(dataObj.total.real2025)}</td>
+                  <td className="p-3 md:p-4 text-right text-blue-400/80 font-bold text-[10px] md:text-xs">{formatter(dataObj.total.orcado2026)}</td>
+                  <td className={`p-3 md:p-4 text-right font-extrabold text-[10px] md:text-xs ${colorClass}`}>{formatter(dataObj.total.real2026)}</td>
+                  <td className="p-3 md:p-4 text-center text-[9px] md:text-[10px] font-bold pr-4 md:pr-6 flex items-center justify-end gap-1 md:gap-2">
+                    <span className={`px-1 md:px-2 py-0.5 md:py-1 rounded border ${statusColor}`}>{isOver ? '+' : ''}{diffPct.toFixed(1)}%</span>
+                    <button onClick={(e) => { e.stopPropagation(); onOpenThread(`METRICA-${nodeId}`); }} className="p-1 hover:text-white text-slate-500"><MessageSquare size={14}/></button>
+                  </td>
+                </tr>
+                
+                {isExp && (
+                  <tr className="bg-[#070b14] border-b border-[#1f2937] shadow-inner">
+                    <td colSpan="5" className="py-4 md:py-6 pl-4 md:pl-16 pr-4 md:pr-6">
+                      <div className="flex flex-nowrap overflow-x-auto gap-3 md:gap-4 w-full custom-scrollbar pb-2 hide-scroll-mobile">
+                        {MONTHS_ORDER.map(m => {
+                          const mData = dataObj.meses[m];
+                          if(mData.real2025 === 0 && mData.orcado2026 === 0 && mData.real2026 === 0) return null;
+                          
+                          const mDiffVal = mData.real2026 - mData.orcado2026;
+                          const mDiffPct = mData.orcado2026 > 0 ? (mDiffVal / mData.orcado2026) * 100 : 0;
+                          const mIsOverBudget = mDiffVal > 0;
+                          const mStatusColor = (mIsOverBudget && isBadIfPositive) || (!mIsOverBudget && !isBadIfPositive) ? 'text-red-400' : 'text-emerald-400';
+
+                          return (
+                            <div key={`${nodeId}-${m}`} className="min-w-[200px] md:min-w-[240px] shrink-0 bg-[#0f172a] border border-[#1e293b] rounded-xl p-3 md:p-4 flex flex-col gap-1.5 md:gap-2 shadow-lg transition-all group">
+                              <div className="flex items-center justify-between border-b border-[#1e293b] pb-1.5 md:pb-2 mb-1">
+                                <span className="text-xs md:text-sm font-extrabold text-slate-200 uppercase tracking-wider">{m.substring(0,3)}</span>
+                                <span className={`text-[9px] md:text-[11px] px-2 py-0.5 rounded-md bg-[#070b14] font-bold border border-transparent ${mStatusColor}`}>
+                                  {mIsOverBudget ? '+' : ''}{mDiffPct.toFixed(1)}%
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px] md:text-xs">
+                                <span className="text-slate-500 font-medium">Real '25</span>
+                                <span className="text-slate-300 font-semibold">{formatter(mData.real2025)}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px] md:text-xs">
+                                <span className="text-blue-500/80 font-medium">Orç '26</span>
+                                <span className="text-blue-400 font-bold">{formatter(mData.orcado2026)}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-[10px] md:text-xs pt-1 mt-0.5 border-t border-[#1e293b]">
+                                <span className="text-cyan-500/80 font-medium">Real '26</span>
+                                <span className={`font-extrabold text-xs md:text-sm ${colorClass.split(' ')[0]}`}>{formatter(mData.real2026)}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          };
+
+          return (
+            <div className="fixed inset-0 z-[70] flex items-end md:items-center justify-center bg-black/80 md:p-4 backdrop-blur-sm">
+              <div className="bg-[#0b1121] rounded-t-2xl md:rounded-2xl shadow-[0_-10px_40px_rgba(0,0,0,1)] md:shadow-[0_0_40px_rgba(0,0,0,1)] border border-[#1f2937] w-full md:max-w-5xl max-h-[90vh] md:max-h-[95vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 md:zoom-in-95 duration-300">
+                
+                <div className="bg-[#0f172a] p-4 md:p-6 flex justify-between items-start sticky top-0 z-10 text-white border-b border-[#1f2937]">
+                  <div>
+                    <span className="text-[9px] md:text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                      <Target size={14}/> Análise Financeira
+                    </span>
+                    <h2 className="text-base md:text-xl font-bold tracking-wider text-slate-100 flex flex-wrap items-center gap-2 md:gap-4">
+                      {conta}
+                      <button onClick={() => onOpenThread(`CONTA-${conta}`)} className="text-[9px] md:text-[10px] uppercase bg-[#111827] border border-[#1f2937] text-cyan-400/80 hover:text-cyan-400 px-2 py-1 rounded flex items-center gap-1.5 transition-all">
+                        <MessageSquare size={12}/> Comentar
+                      </button>
+                    </h2>
+                  </div>
+                  <button onClick={onClose} className="p-1.5 md:p-2 bg-[#1e293b] border border-[#334155] rounded-lg text-slate-400 hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#040814] custom-scrollbar hide-scroll-mobile">
+                  <div className="border border-[#1f2937] rounded-xl overflow-x-auto bg-[#0b1121] shadow-sm custom-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[700px]">
+                      <thead>
+                        <tr className="bg-[#0f172a] text-slate-400 text-[9px] md:text-[10px] font-extrabold uppercase tracking-widest border-b border-[#1f2937]">
+                          <th className="p-3 md:p-5 w-[30%] pl-4 md:pl-6 whitespace-nowrap">Frota</th>
+                          <th className="p-3 md:p-5 text-right w-[15%] whitespace-nowrap">Real '25 (YTD)</th>
+                          <th className="p-3 md:p-5 text-right w-[15%] text-blue-400 whitespace-nowrap">Orç '26 (YTD)</th>
+                          <th className="p-3 md:p-5 text-right w-[15%] text-cyan-400 whitespace-nowrap">Real '26 (YTD)</th>
+                          <th className="p-3 md:p-5 text-center w-[15%] pr-4 md:pr-6 whitespace-nowrap">Var %</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-xs md:text-sm">
+                        {familyHierarchy.length === 0 && (
+                           <tr><td colSpan="5" className="p-8 text-center text-slate-500 font-medium">Sem dados vinculados a esta conta.</td></tr>
+                        )}
+                        
+                        {familyHierarchy.map((fam, fIdx) => {
+                          const famId = `fam-${fam.label}`;
+                          const isFamExp = expandedNodes[famId];
+                          const fDiff = fam.financeiroTotal.real2026 - fam.financeiroTotal.orcado2026;
+                          
+                          return (
+                            <Fragment key={famId}>
+                              <tr onClick={() => toggleNode(famId)} className={`border-b border-[#1f2937] transition-all duration-200 cursor-pointer ${isFamExp ? 'bg-[#1e293b]' : 'bg-[#111827] hover:bg-[#1e293b]'}`}>
+                                <td className="p-3 md:p-4 pl-4 md:pl-6 font-bold text-white flex items-center gap-2 md:gap-3">
+                                  <span className="text-cyan-400 bg-[#0f172a] p-1 rounded shadow-sm border border-[#334155]">{isFamExp ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}</span>
+                                  <FamilyIcon family={fam.label} size={16} />
+                                  <span>{fam.label}</span>
+                                </td>
+                                <td className="p-3 md:p-4 text-right text-slate-400 font-medium">{formatCurrency(fam.financeiroTotal.real2025)}</td>
+                                <td className="p-3 md:p-4 text-right font-bold text-blue-400">{formatCurrency(fam.financeiroTotal.orcado2026)}</td>
+                                <td className="p-3 md:p-4 text-right font-extrabold text-cyan-400">{formatCurrency(fam.financeiroTotal.real2026)}</td>
+                                <td className="p-3 md:p-4 text-center text-[10px] md:text-[11px] font-bold pr-4 md:pr-6">
+                                  <span className={`px-2 py-1 rounded border ${fDiff > 0 ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>{fDiff > 0 ? '+' : ''}{fam.financeiroTotal.orcado2026 > 0 ? ((fDiff/fam.financeiroTotal.orcado2026)*100).toFixed(1) : 0}%</span>
+                                </td>
+                              </tr>
+
+                              {isFamExp && fam.modelosList.map((mod, mIdx) => {
+                                const modId = `${famId}-mod-${mod.label}`; const isModExp = expandedNodes[modId];
+                                return (
+                                  <Fragment key={modId}>
+                                    <tr onClick={() => toggleNode(modId)} className={`border-b border-[#1f2937] transition-all duration-200 cursor-pointer ${isModExp ? 'bg-[#162032]' : 'bg-[#0f172a] hover:bg-[#162032]'}`}>
+                                      <td className="p-3 md:p-3 pl-8 md:pl-12 font-bold text-slate-300 flex items-center gap-2 md:gap-3 text-xs md:text-sm group-hover:text-cyan-400">
+                                        <span className="text-cyan-500 bg-[#1e293b] rounded p-0.5 border border-[#334155] shadow-sm">{isModExp ? <MinusSquare size={14}/> : <PlusSquare size={14}/>}</span> 
+                                        <span className="truncate max-w-[120px] md:max-w-[200px]">{mod.label}</span>
+                                      </td>
+                                      <td className="p-3 md:p-3 text-right text-slate-500 text-[10px] md:text-xs font-medium">{formatCurrency(mod.financeiro.total.real2025)}</td>
+                                      <td className="p-3 md:p-3 text-right font-bold text-blue-500/80 text-[10px] md:text-xs">{formatCurrency(mod.financeiro.total.orcado2026)}</td>
+                                      <td className="p-3 md:p-3 text-right font-bold text-cyan-500/80 text-[10px] md:text-xs">{formatCurrency(mod.financeiro.total.real2026)}</td>
+                                      <td className="p-3 md:p-3 text-center pr-4 md:pr-6 text-[9px] md:text-[10px] font-bold text-slate-500">-</td>
+                                    </tr>
+
+                                    {isModExp && (
+                                      <Fragment>
+                                        {renderMetricRow("💰 Custo Acumulado", mod.financeiro, `${modId}-fin`, formatCurrency, true, "text-cyan-400")}
+                                      </Fragment>
+                                    )}
+                                  </Fragment>
+                                );
+                              })}
+                            </Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

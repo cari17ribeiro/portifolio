@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nollie 3D Manager - Demonstração</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/tailwindcss-cdn@3.4.1/tailwindcss.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        body { 
+            background-color: #020617;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #e2e8f0;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(30, 41, 59, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-modern {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            transition: all 0.2s;
+        }
+        .input-modern:focus {
+            background: rgba(15, 23, 42, 0.9);
+            border-color: #10b981;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+
+        .chart-bar { transition: height 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .chart-progress { transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef } = React;
+
+        // ============================================================================
+        // Componente de Ícone (Adaptado para funcionar sem bundler)
+        // ============================================================================
+        const Icon = ({ name, size = 20, className = '' }) => {
+            const kebabName = name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+            return (
+                <span 
+                    className={className} 
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: size, height: size }}
+                    dangerouslySetInnerHTML={{ __html: `<i data-lucide="${kebabName}" style="width: ${size}px; height: ${size}px;"></i>` }}
+                />
+            );
+        };
+
+        // ============================================================================
+        // Componentes Base UI
+        // ============================================================================
+        const Button = ({ children, onClick, variant = 'primary', className = '', disabled, type="button" }) => {
+            const variants = {
+                primary: 'bg-gradient-to-r from-emerald-500 to-emerald-400 hover:from-emerald-400 hover:to-emerald-300 text-white shadow-lg shadow-emerald-500/25 border border-emerald-400/30',
+                secondary: 'bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/30',
+                whatsapp: 'bg-gradient-to-r from-[#25D366] to-[#1caa54] hover:from-[#1caa54] hover:to-[#179649] text-white shadow-lg shadow-green-500/25 border border-green-400/30',
+                danger: 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/40',
+                ghost: 'bg-slate-800/40 hover:bg-slate-700/60 text-slate-300 hover:text-white border border-transparent hover:border-slate-600/50',
+                outline: 'border border-slate-600 hover:border-slate-400 text-slate-400 hover:text-white bg-transparent'
+            };
+            return (
+                <button 
+                    type={type} onClick={onClick} disabled={disabled}
+                    className={`px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm active:scale-[0.98] ${variants[variant]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed grayscale active:scale-100' : ''}`}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        const Input = ({ label, className = '', ...props }) => (
+            <div className={`mb-4 ${className}`}>
+                {label && <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 ml-1">{label}</label>}
+                <input className="w-full bg-slate-900/50 border border-slate-700/50 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-500 transition-all outline-none shadow-inner" {...props} />
+            </div>
+        );
+
+        const Select = ({ label, className = '', children, ...props }) => (
+            <div className={`mb-4 ${className}`}>
+                {label && <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 ml-1">{label}</label>}
+                <div className="relative">
+                    <select className="w-full bg-slate-900/50 border border-slate-700/50 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-500 transition-all outline-none shadow-inner appearance-none" {...props}>
+                        {children}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400"><Icon name="ChevronDown" size={16} /></div>
+                </div>
+            </div>
+        );
+
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
+                    <div className="relative w-full max-w-lg bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden animate-fade-in ring-1 ring-white/10 max-h-[90vh] flex flex-col">
+                        <div className="px-6 py-4 border-b border-slate-800/60 flex justify-between items-center bg-slate-800/30 shrink-0">
+                            <h3 className="font-bold text-white text-lg">{title}</h3>
+                            <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-700/50"><Icon name="X" /></button>
+                        </div>
+                        <div className="p-6 overflow-y-auto custom-scrollbar">{children}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        const FilamentSpool = ({ color, percent = 1 }) => {
+            const safeColorId = (color || '#ffffff').replace(/[^a-zA-Z0-9]/g, '');
+            const maxBarrelHeight = 46;
+            const minBarrelHeight = 20;
+            const currentHeight = minBarrelHeight + ((maxBarrelHeight - minBarrelHeight) * Math.max(0, Math.min(1, percent)));
+            const currentY = 40 - (currentHeight / 2);
+            return (
+                <svg width="64" height="80" viewBox="0 0 64 80" className="drop-shadow-[0_8px_10px_rgba(0,0,0,0.6)] group-hover:-translate-y-2 transition-transform duration-300">
+                    <defs>
+                        <linearGradient id={`cyl-${safeColorId}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#000" stopOpacity="0.7"/>
+                            <stop offset="25%" stopColor="#000" stopOpacity="0.1"/>
+                            <stop offset="50%" stopColor="#fff" stopOpacity="0.3"/>
+                            <stop offset="75%" stopColor="#000" stopOpacity="0.1"/>
+                            <stop offset="100%" stopColor="#000" stopOpacity="0.7"/>
+                        </linearGradient>
+                        <pattern id="f-threads" width="4" height="100%" patternUnits="userSpaceOnUse">
+                            <line x1="0" y1="0" x2="0" y2="80" stroke="#000" strokeWidth="1" strokeOpacity="0.3" />
+                        </pattern>
+                        <linearGradient id="flangeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#334155"/>
+                            <stop offset="50%" stopColor="#1e293b"/>
+                            <stop offset="100%" stopColor="#0f172a"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="4" y="6" width="10" height="68" rx="2" fill="url(#flangeGrad)" stroke="#020617" strokeWidth="1"/>
+                    <rect x="14" y="32" width="36" height="16" fill="#0f172a" />
+                    <rect x="14" y={currentY} width="36" height={currentHeight} fill={color || '#fff'} />
+                    <rect x="14" y={currentY} width="36" height={currentHeight} fill="url(#f-threads)" />
+                    <rect x="14" y={currentY} width="36" height={currentHeight} fill={`url(#cyl-${safeColorId})`} />
+                    <rect x="50" y="6" width="10" height="68" rx="2" fill="url(#flangeGrad)" stroke="#020617" strokeWidth="1"/>
+                    <circle cx="9" cy="40" r="3" fill="#020617" />
+                    <circle cx="55" cy="40" r="3" fill="#020617" />
+                </svg>
+            );
+        };
+
+        const OrderCard = ({ order, onAction, onDelete }) => {
+            const statusConfig = {
+                pending_budget: { color: 'border-l-yellow-400', bg: 'bg-yellow-400/10', text: 'text-yellow-400', glow: 'group-hover:shadow-yellow-500/10' },
+                pending_approval: { color: 'border-l-blue-400', bg: 'bg-blue-400/10', text: 'text-blue-400', glow: 'group-hover:shadow-blue-500/10' },
+                pending_payment: { color: 'border-l-purple-400', bg: 'bg-purple-400/10', text: 'text-purple-400', glow: 'group-hover:shadow-purple-500/10' },
+                paid: { color: 'border-l-emerald-400', bg: 'bg-emerald-400/10', text: 'text-emerald-400', glow: 'group-hover:shadow-emerald-500/10' },
+                packing: { color: 'border-l-orange-400', bg: 'bg-orange-400/10', text: 'text-orange-400', glow: 'group-hover:shadow-orange-500/10' },
+                shipping: { color: 'border-l-cyan-400', bg: 'bg-cyan-400/10', text: 'text-cyan-400', glow: 'group-hover:shadow-cyan-500/10' },
+                delivered: { color: 'border-l-slate-400', bg: 'bg-slate-400/10', text: 'text-slate-400', glow: 'group-hover:shadow-slate-500/10' },
+            };
+            const config = statusConfig[order.status];
+
+            return (
+                <div className={`bg-slate-800/40 backdrop-blur-md border border-slate-700/50 hover:bg-slate-800/70 hover:border-slate-600/60 rounded-xl p-4 mb-3 border-l-4 ${config.color} transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${config.glow} animate-fade-in group relative`}>
+                    <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1 min-w-0 pr-2">
+                            <h4 className="font-bold text-slate-100 truncate text-sm leading-tight group-hover:text-white transition-colors">{order.client}</h4>
+                            <p className="text-[10px] text-slate-500 uppercase font-bold mt-1 tracking-wider">{order.phone || 'Sem telefone'}</p>
+                        </div>
+                        <span className={`text-xs font-mono font-bold px-2.5 py-1 rounded-md ${config.bg} ${config.text} border border-current/10`}>
+                            R$ {parseFloat(order.price || 0).toFixed(2)}
+                        </span>
+                    </div>
+                    
+                    <p className="text-slate-400 text-xs mb-4 line-clamp-2 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-white/5 shadow-inner">
+                        {order.description}
+                    </p>
+
+                    {order.material_cost > 0 && (
+                        <div className="flex items-center gap-2 mb-4 text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1.5 rounded-lg w-fit border border-emerald-500/20">
+                            <Icon name="Droplet" size={12} />
+                            <span>Mat: <b>R$ {parseFloat(order.material_cost).toFixed(2)}</b></span>
+                            <span className="text-emerald-500/50">|</span>
+                            <span>{order.filament_weight}g</span>
+                        </div>
+                    )}
+                    
+                    <div className="flex gap-2 items-center">
+                        {order.status !== 'delivered' && (
+                            <Button 
+                                onClick={() => onAction(order)} 
+                                className="flex-1 py-2 text-[11px] h-8 shadow-none"
+                                variant={['pending_budget', 'pending_approval', 'shipping'].includes(order.status) ? 'whatsapp' : 'secondary'}
+                            >
+                                {order.status === 'pending_budget' && <><Icon name="DollarSign" size={14}/> Orçamento</>}
+                                {order.status === 'pending_approval' && <><Icon name="Link" size={14}/> Enviar Link</>}
+                                {order.status === 'pending_payment' && <><Icon name="CheckCircle" size={14}/> Confirmar</>}
+                                {order.status === 'paid' && <><Icon name="Printer" size={14}/> Imprimir</>}
+                                {order.status === 'packing' && <><Icon name="Package" size={14}/> Embalar</>}
+                                {order.status === 'shipping' && <><Icon name="Truck" size={14}/> Enviar</>}
+                            </Button>
+                        )}
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onDelete(order.id); }} 
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-red-500/20 hover:text-red-400 border border-transparent hover:border-red-500/20 transition-all"
+                        >
+                            <Icon name="Trash2" size={16} />
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // ============================================================================
+        // DADOS FAKE (Mock Data para Demonstração)
+        // ============================================================================
+        const MOCK_ORDERS = [
+            { id: 1, client: "Carlos Eduardo", phone: "11999991111", description: "Suporte de Controle PS5", price: 85.00, status: "pending_budget", date: new Date().toISOString() },
+            { id: 2, client: "Marina Tech", phone: "11999992222", description: "Case para Teclado Mecânico Custom (Branco)", price: 220.00, status: "pending_approval", date: new Date().toISOString() },
+            { id: 3, client: "João Lucas", phone: "11999993333", description: "Vaso Decorativo Low Poly", price: 110.00, status: "paid", date: new Date().toISOString() },
+            { id: 4, client: "Ana Beatriz", phone: "11999994444", description: "Miniaturas de RPG (Mago e Guerreiro)", price: 185.00, status: "packing", date: new Date().toISOString(), filament_weight: 45, material_cost: 6.30 },
+            { id: 5, client: "Empresa XPTO", phone: "11999995555", description: "Brindes Corporativos com Logo (50x)", price: 1500.00, status: "shipping", date: new Date().toISOString(), filament_weight: 850, material_cost: 102.00 }
+        ];
+
+        const MOCK_FILAMENTS = [
+            { id: 1, name: "PLA Premium Verde", material: "PLA", weight_initial: 1000, weight_current: 850, cost: 120, color: "#10b981", date: new Date().toISOString() },
+            { id: 2, name: "PETG Resistente", material: "PETG", weight_initial: 1000, weight_current: 250, cost: 140, color: "#ffffff", date: new Date().toISOString() },
+            { id: 3, name: "ABS Flex Vermelho", material: "ABS", weight_initial: 1000, weight_current: 1000, cost: 130, color: "#ef4444", date: new Date().toISOString() }
+        ];
+
+        const MOCK_EXPENSES = [
+            { id: 1, description: "Manutenção Bico Extrusor", category: "Manutenção", amount: 150, date: new Date(Date.now() - 86400000 * 2).toISOString() },
+            { id: 2, description: "PLA - Premium Verde", category: "Filamento", amount: 120, date: new Date(Date.now() - 86400000 * 5).toISOString() }
+        ];
+
+        const EXPENSE_CATEGORIES = ["Filamento", "Manutenção", "Embalagens", "Testes / Falhas de Impressão", "Logística e Entrega", "Ferramentas e Equipamentos", "Software e Tecnologia", "Outros"];
+        const FILAMENT_MATERIALS = ["PLA", "ABS", "PETG", "TPU", "Resina", "Outro"];
+
+        // ============================================================================
+        // Aplicação Principal Demo
+        // ============================================================================
+        function MainApp() {
+            const [view, setView] = useState('analytics');
+            const [sidebarOpen, setSidebarOpen] = useState(false);
+            const [chartMounted, setChartMounted] = useState(false);
+
+            // States com os Dados Mockados
+            const [orders, setOrders] = useState(MOCK_ORDERS);
+            const [expenses, setExpenses] = useState(MOCK_EXPENSES);
+            const [filaments, setFilaments] = useState(MOCK_FILAMENTS);
+
+            // Modals
+            const [linkModalOpen, setLinkModalOpen] = useState(false);
+            const [shippingModalOpen, setShippingModalOpen] = useState(false);
+            const [printModalOpen, setPrintModalOpen] = useState(false);
+            const [historyModalOpen, setHistoryModalOpen] = useState(false);
+
+            const [editingOrder, setEditingOrder] = useState(null);
+            const [tempLink, setTempLink] = useState('');
+            const [shippingMethod, setShippingMethod] = useState('pickup');
+            const [trackingCode, setTrackingCode] = useState('');
+            const [printFilamentId, setPrintFilamentId] = useState('');
+            const [printWeight, setPrintWeight] = useState('');
+            const [selectedSpoolForHistory, setSelectedSpoolForHistory] = useState(null);
+
+            const [newOrder, setNewOrder] = useState({ client: '', phone: '', description: '', price: '', paymentLink: '' });
+            const [newExpense, setNewExpense] = useState({ 
+                description: '', amount: '', category: EXPENSE_CATEGORIES[0], 
+                filamentMaterial: 'PLA', filamentWeightKg: '1', filamentColor: '#10b981' 
+            });
+
+            // Injeta os ícones do Lucide sempre que houver renderização
+            useEffect(() => {
+                const timeout = setTimeout(() => {
+                    if(window.lucide) window.lucide.createIcons();
+                }, 50);
+                return () => clearTimeout(timeout);
+            });
+
+            useEffect(() => {
+                if (view === 'analytics') setTimeout(() => setChartMounted(true), 100);
+                else setChartMounted(false);
+            }, [view]);
+
+            const updateOrderStatus = (id, status) => {
+                const updatedOrders = orders.map(o => o.id === id ? { ...o, status } : o);
+                setOrders(updatedOrders);
+            };
+
+            const handleOrderAction = (order) => {
+                const nextStatusMap = {
+                    'pending_budget': 'pending_approval', 'pending_approval': 'pending_payment',
+                    'pending_payment': 'paid', 'paid': 'packing', 'packing': 'shipping', 'shipping': 'delivered'
+                };
+                const nextStatus = nextStatusMap[order.status];
+
+                if (order.status === 'pending_budget') {
+                    alert(`(Demonstração) Redirecionando para WhatsApp com o orçamento de R$ ${order.price}...`);
+                    updateOrderStatus(order.id, nextStatus);
+                } 
+                else if (order.status === 'pending_approval') {
+                    setEditingOrder(order);
+                    setTempLink(order.paymentLink || '');
+                    setLinkModalOpen(true);
+                }
+                else if (order.status === 'paid') {
+                    setEditingOrder(order);
+                    setPrintFilamentId(filaments.length > 0 ? filaments[0].id : '');
+                    setPrintWeight('');
+                    setPrintModalOpen(true);
+                }
+                else if (order.status === 'shipping') {
+                    setEditingOrder(order);
+                    setShippingMethod('pickup');
+                    setTrackingCode('');
+                    setShippingModalOpen(true);
+                }
+                else {
+                    updateOrderStatus(order.id, nextStatus);
+                }
+            };
+
+            const confirmLinkAndSend = () => {
+                const updatedOrders = orders.map(o => o.id === editingOrder.id ? { ...o, paymentLink: tempLink, status: 'pending_payment' } : o);
+                setOrders(updatedOrders);
+                alert(`(Demonstração) Link enviado para ${editingOrder.client} via WhatsApp!`);
+                setLinkModalOpen(false);
+                setEditingOrder(null);
+            };
+
+            const confirmPrintAndDeductStock = () => {
+                let filamentCost = 0;
+                const weightNum = parseFloat(printWeight || 0);
+
+                if (printFilamentId && weightNum > 0) {
+                    const filament = filaments.find(f => f.id == printFilamentId); // Usando == por causa de conversão de tipos
+                    if (filament) {
+                        const newWeight = filament.weight_current - weightNum;
+                        filamentCost = (filament.cost / filament.weight_initial) * weightNum;
+                        
+                        setFilaments(filaments.map(f => f.id == printFilamentId ? { ...f, weight_current: newWeight } : f));
+                    }
+                }
+
+                const updatedOrders = orders.map(o => o.id === editingOrder.id ? { 
+                    ...o, status: 'packing', filament_id: printFilamentId || null, filament_weight: weightNum, material_cost: filamentCost 
+                } : o);
+                
+                setOrders(updatedOrders);
+                setPrintModalOpen(false);
+                setEditingOrder(null);
+            };
+
+            const confirmShippingAndSend = () => {
+                const updatedOrders = orders.map(o => o.id === editingOrder.id ? { ...o, status: 'delivered' } : o);
+                setOrders(updatedOrders);
+                alert(`(Demonstração) Mensagem de envio disparada para ${editingOrder.client}!`);
+                setShippingModalOpen(false);
+                setEditingOrder(null);
+            };
+
+            const handleDeleteOrder = (id) => {
+                if(window.confirm('Deletar pedido permanentemente? (Modo Demo)')) {
+                    setOrders(orders.filter(o => o.id !== id));
+                }
+            };
+
+            const handleAddOrder = (e) => {
+                e.preventDefault();
+                const orderToSave = {
+                    id: Math.random(), client: newOrder.client, phone: newOrder.phone,
+                    description: newOrder.description, price: parseFloat(newOrder.price || 0),
+                    paymentLink: newOrder.paymentLink, status: 'pending_budget', date: new Date().toISOString()
+                };
+                setOrders([orderToSave, ...orders]);
+                setNewOrder({ client: '', phone: '', description: '', price: '', paymentLink: '' });
+                setView('kanban');
+            };
+
+            const handleAddExpense = (e) => {
+                e.preventDefault();
+                const costNum = parseFloat(newExpense.amount || 0);
+                let finalDescription = newExpense.category === 'Filamento' ? `${newExpense.filamentMaterial} - ${newExpense.description}` : newExpense.description;
+
+                const expenseToSave = {
+                    id: Math.random(), description: finalDescription, amount: costNum,
+                    category: newExpense.category, date: new Date().toISOString()
+                };
+                setExpenses([expenseToSave, ...expenses]);
+
+                if (newExpense.category === 'Filamento') {
+                    const weightNum = parseFloat(newExpense.filamentWeightKg || 0) * 1000;
+                    const filamentToSave = {
+                        id: Math.random(), name: newExpense.description, material: newExpense.filamentMaterial,
+                        weight_initial: weightNum, weight_current: weightNum, cost: costNum,
+                        color: newExpense.filamentColor || '#ffffff', date: new Date().toISOString()
+                    };
+                    setFilaments([filamentToSave, ...filaments]);
+                }
+
+                setNewExpense({ description: '', amount: '', category: EXPENSE_CATEGORIES[0], filamentMaterial: 'PLA', filamentWeightKg: '1', filamentColor: '#10b981' });
+                setView('stock');
+            };
+
+            const handleDeleteExpense = (id) => {
+                if(window.confirm('Apagar despesa permanentemente?')) {
+                    setExpenses(expenses.filter(e => e.id !== id));
+                }
+            };
+
+            const handleDeleteFilament = (id) => {
+                if(window.confirm('Excluir rolo do estoque?')) {
+                    setFilaments(filaments.filter(f => f.id !== id));
+                }
+            };
+
+            const openSpoolHistory = (filament) => {
+                setSelectedSpoolForHistory(filament);
+                setHistoryModalOpen(true);
+            };
+
+            const revenue = orders.filter(o => ['paid','packing','shipping','delivered'].includes(o.status)).reduce((a, b) => a + parseFloat(b.price || 0), 0);
+            const pendingRevenue = orders.filter(o => ['pending_budget','pending_approval','pending_payment'].includes(o.status)).reduce((a, b) => a + parseFloat(b.price || 0), 0);
+            const cost = expenses.reduce((a, b) => a + parseFloat(b.amount || 0), 0);
+            const profit = revenue - cost;
+            const totalOrders = orders.length;
+
+            const columns = [
+                { id: 'pending_budget', title: 'Orçamento', icon: 'Clock', color: 'text-yellow-400', border: 'border-yellow-400/30' },
+                { id: 'pending_approval', title: 'Aprovação', icon: 'MessageCircle', color: 'text-blue-400', border: 'border-blue-400/30' },
+                { id: 'pending_payment', title: 'Pagamento', icon: 'CreditCard', color: 'text-purple-400', border: 'border-purple-400/30' },
+                { id: 'paid', title: 'Imprimir', icon: 'Printer', color: 'text-emerald-400', border: 'border-emerald-400/30' },
+                { id: 'packing', title: 'Acabamento', icon: 'Package', color: 'text-orange-400', border: 'border-orange-400/30' },
+                { id: 'shipping', title: 'Envio', icon: 'Truck', color: 'text-cyan-400', border: 'border-cyan-400/30' },
+                { id: 'delivered', title: 'Concluído', icon: 'CheckSquare', color: 'text-slate-400', border: 'border-slate-400/30' },
+            ];
+
+            const maxFinancialValue = Math.max(revenue, cost, Math.abs(profit), pendingRevenue, 1);
+            const getBarHeight = (val) => chartMounted ? `${Math.max((val / maxFinancialValue) * 100, 5)}%` : '0%';
+
+            return (
+                <div className="flex h-screen overflow-hidden bg-slate-950 font-sans text-slate-200">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-950/10 via-transparent to-transparent pointer-events-none"></div>
+
+                    {/* Sidebar */}
+                    <aside className={`fixed inset-y-0 left-0 z-40 w-72 bg-slate-900/80 backdrop-blur-2xl border-r border-white/5 transform transition-transform duration-300 lg:relative lg:translate-x-0 flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                        <div className="p-8 pb-6 flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                                <Icon name="Box" size={28} className="text-white" />
+                            </div>
+                            <div>
+                                <h1 className="font-black text-xl text-white tracking-tight leading-none">Nollie <span className="text-emerald-500">3D</span></h1>
+                                <span className="text-[10px] text-slate-400 font-bold tracking-[0.2em] uppercase">Demo App</span>
+                            </div>
+                        </div>
+
+                        <div className="px-6 pb-6"><div className="h-px w-full bg-gradient-to-r from-transparent via-slate-700/50 to-transparent"></div></div>
+
+                        <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+                            {[
+                                { id: 'analytics', icon: 'PieChart', label: 'Dashboard' },
+                                { id: 'kanban', icon: 'LayoutGrid', label: 'Pedidos' },
+                                { id: 'stock', icon: 'Database', label: 'Estoque' },
+                                { id: 'expenses', icon: 'TrendingDown', label: 'Despesas' },
+                            ].map(item => (
+                                <button key={item.id} onClick={() => { setView(item.id); setSidebarOpen(false); }} 
+                                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all font-medium ${view === item.id ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-400 hover:bg-slate-800/50 hover:text-white border border-transparent'}`}>
+                                    <Icon name={item.icon} size={20} /> {item.label}
+                                </button>
+                            ))}
+                        </nav>
+
+                        <div className="p-6 mt-auto">
+                            <div className="bg-slate-950/50 border border-white/5 p-5 rounded-2xl mb-4 relative overflow-hidden">
+                                <div className="absolute -top-4 -right-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl"></div>
+                                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block mb-1">Lucro Atual</span>
+                                <span className={`text-2xl font-black ${profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>R$ {profit.toFixed(2)}</span>
+                            </div>
+                            <div className="flex items-center gap-3 px-2">
+                                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+                                    <Icon name="User" size={16} className="text-slate-400" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-xs text-slate-300 font-medium truncate">visitante@demo.com</p>
+                                    <p className="text-[10px] text-emerald-500 font-bold">Modo Visualização</p>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 flex flex-col relative overflow-hidden z-10">
+                        <header className="h-20 flex items-center justify-between px-6 lg:hidden border-b border-white/5 bg-slate-900/80 backdrop-blur-xl sticky top-0 z-30">
+                            <button onClick={() => setSidebarOpen(true)} className="text-slate-300 p-2 bg-slate-800 rounded-lg"><Icon name="Menu" /></button>
+                            <div className="flex items-center gap-2">
+                                <Icon name="Box" className="text-emerald-500" size={24}/>
+                                <span className="font-bold text-white text-lg">Nollie 3D</span>
+                            </div>
+                            <button onClick={() => setView('new-order')} className="text-white bg-emerald-500 p-2 rounded-lg shadow-lg shadow-emerald-500/20"><Icon name="Plus" /></button>
+                        </header>
+
+                        <div className="flex-1 overflow-x-hidden overflow-y-auto relative p-4 lg:p-8">
+                            
+                            {/* --- ANALYTICS DASHBOARD VIEW --- */}
+                            {view === 'analytics' && (
+                                <div className="max-w-7xl mx-auto w-full animate-fade-in space-y-8">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                                        <div>
+                                            <h2 className="text-3xl font-black text-white tracking-tight mb-1">Visão Geral</h2>
+                                            <p className="text-slate-400 font-medium">Acompanhe as métricas e a saúde da sua operação.</p>
+                                        </div>
+                                        <Button onClick={() => setView('new-order')} className="shadow-emerald-500/20 whitespace-nowrap hidden sm:flex">
+                                            <Icon name="Plus" size={18} /> Novo Pedido
+                                        </Button>
+                                    </div>
+
+                                    {/* Metrics Cards */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                                        {[
+                                            { title: 'Receita (Paga)', value: revenue, icon: 'TrendingUp', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', from: 'from-emerald-500/5' },
+                                            { title: 'Despesas', value: cost, icon: 'TrendingDown', color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', from: 'from-red-500/5' },
+                                            { title: 'Lucro Líquido', value: profit, icon: 'DollarSign', color: profit < 0 ? 'text-red-400' : 'text-blue-400', bg: profit < 0 ? 'bg-red-500/10' : 'bg-blue-500/10', border: profit < 0 ? 'border-red-500/20' : 'border-blue-500/20', from: profit < 0 ? 'from-red-500/5' : 'from-blue-500/5' },
+                                            { title: 'A Receber', value: pendingRevenue, icon: 'Clock', color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', from: 'from-yellow-500/5' }
+                                        ].map((stat, i) => (
+                                            <div key={i} className={`bg-slate-900/60 backdrop-blur-xl p-6 rounded-3xl border border-white/5 hover:border-white/10 transition-colors relative overflow-hidden group shadow-lg`}>
+                                                <div className={`absolute inset-0 bg-gradient-to-br ${stat.from} to-transparent opacity-50`}></div>
+                                                <div className={`absolute right-[-20px] top-[-20px] opacity-10 group-hover:scale-110 group-hover:opacity-20 transition-all duration-500 ${stat.color}`}><Icon name={stat.icon} size={120} /></div>
+                                                <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+                                                    <div className={`w-12 h-12 rounded-2xl ${stat.bg} ${stat.color} border ${stat.border} flex items-center justify-center shadow-inner`}><Icon name={stat.icon} size={24} /></div>
+                                                    <div>
+                                                        <p className="text-sm text-slate-400 font-semibold mb-1">{stat.title}</p>
+                                                        <h3 className={`text-3xl font-black ${stat.title === 'Lucro Líquido' ? (profit < 0 ? 'text-red-400' : 'text-white') : 'text-white'}`}>
+                                                            <span className="text-lg text-slate-500 mr-1">R$</span>{Math.abs(stat.value).toFixed(2)}
+                                                        </h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Charts Section */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 p-6 sm:p-8 rounded-3xl shadow-lg flex flex-col h-[400px]">
+                                            <div className="flex justify-between items-center mb-8">
+                                                <h3 className="font-bold text-white flex items-center gap-3 text-lg"><span className="w-2 h-6 bg-emerald-500 rounded-full"></span> Balanço Financeiro</h3>
+                                            </div>
+                                            <div className="flex-1 flex items-end justify-around gap-2 sm:gap-6 pb-2 border-b border-slate-800">
+                                                {[
+                                                    { label: 'Receita', value: revenue, color: 'bg-emerald-500', hover: 'hover:bg-emerald-400', text: 'text-emerald-100' },
+                                                    { label: 'Despesas', value: cost, color: 'bg-red-500', hover: 'hover:bg-red-400', text: 'text-red-100' },
+                                                    { label: 'Lucro', value: Math.max(profit, 0), color: profit >= 0 ? 'bg-blue-500' : 'bg-slate-700', hover: profit >= 0 ? 'hover:bg-blue-400' : '', text: profit >= 0 ? 'text-blue-100' : 'text-slate-400', display: profit },
+                                                    { label: 'A Receber', value: pendingRevenue, color: 'bg-yellow-500', hover: 'hover:bg-yellow-400', text: 'text-yellow-100' }
+                                                ].map((bar, i) => (
+                                                    <div key={i} className="flex flex-col items-center gap-4 group w-14 sm:w-24">
+                                                        <div className={`w-full ${bar.color} rounded-t-xl relative chart-bar flex items-end justify-center pb-3 ${bar.hover} transition-all duration-300 shadow-[0_0_15px_rgba(0,0,0,0.2)]`} style={{ height: getBarHeight(bar.value) }}>
+                                                            <span className={`text-[10px] sm:text-xs font-bold ${bar.text} opacity-0 group-hover:opacity-100 transition-opacity -translate-y-8 absolute whitespace-nowrap bg-slate-800 px-2 py-1 rounded-md border border-white/10 shadow-xl`}>
+                                                                R$ {(bar.display !== undefined ? bar.display : bar.value).toFixed(0)}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider">{bar.label}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-slate-900/60 backdrop-blur-xl border border-white/5 p-6 sm:p-8 rounded-3xl shadow-lg flex flex-col h-[400px]">
+                                            <div className="flex justify-between items-center mb-8">
+                                                <h3 className="font-bold text-white flex items-center gap-3 text-lg"><span className="w-2 h-6 bg-blue-500 rounded-full"></span> Funil de Pedidos</h3>
+                                                <span className="text-xs bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 font-bold shadow-inner">{totalOrders} Total</span>
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-6">
+                                                {columns.map(col => {
+                                                    const count = orders.filter(o => o.status === col.id).length;
+                                                    const percentage = totalOrders === 0 ? 0 : (count / totalOrders) * 100;
+                                                    if (totalOrders > 0 && count === 0) return null;
+                                                    return (
+                                                        <div key={col.id} className="group">
+                                                            <div className="flex justify-between text-sm mb-2">
+                                                                <span className={`font-semibold ${col.color} flex items-center gap-2`}><Icon name={col.icon} size={16} /> {col.title}</span>
+                                                                <span className="text-slate-400 font-bold group-hover:text-white transition-colors">{count} und <span className="text-slate-600 ml-1 font-medium">({percentage.toFixed(0)}%)</span></span>
+                                                            </div>
+                                                            <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                                                                <div className={`h-full ${col.color.replace('text-', 'bg-')} rounded-full chart-progress relative`} style={{ width: chartMounted ? `${percentage}%` : '0%' }}>
+                                                                    <div className="absolute inset-0 bg-white/20 w-full h-full animate-[pulse_2s_ease-in-out_infinite]"></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- KANBAN VIEW --- */}
+                            {view === 'kanban' && (
+                                <div className="h-full flex flex-col animate-fade-in max-w-[1600px] mx-auto">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8 shrink-0">
+                                        <div>
+                                            <h2 className="text-3xl font-black text-white tracking-tight mb-1">Quadro de Produção</h2>
+                                            <p className="text-slate-400 font-medium">Controle as etapas dos pedidos em tempo real.</p>
+                                        </div>
+                                        <Button onClick={() => setView('new-order')} className="shadow-emerald-500/20">
+                                            <Icon name="Plus" size={18} /> Novo Pedido
+                                        </Button>
+                                    </div>
+                                    <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4 custom-scrollbar">
+                                        <div className="flex gap-6 h-full min-w-max">
+                                            {columns.map(col => {
+                                                const colOrders = orders.filter(o => o.status === col.id);
+                                                return (
+                                                    <div key={col.id} className={`w-[340px] flex flex-col h-full bg-slate-900/40 backdrop-blur-xl rounded-3xl border border-white/5 shadow-xl`}>
+                                                        <div className={`p-5 flex items-center justify-between border-b ${col.border} bg-slate-800/20 rounded-t-3xl`}>
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-8 h-8 rounded-lg ${col.color.replace('text-', 'bg-').replace('400', '500/20')} ${col.color} flex items-center justify-center border ${col.border}`}><Icon name={col.icon} size={16} /></div>
+                                                                <h3 className="font-bold text-slate-200 text-sm uppercase tracking-wide">{col.title}</h3>
+                                                            </div>
+                                                            <span className="bg-slate-950 text-slate-400 text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-800 shadow-inner">{colOrders.length}</span>
+                                                        </div>
+                                                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                                                            {colOrders.length === 0 && (
+                                                                <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+                                                                    <div className={`w-16 h-16 border-2 border-dashed ${col.border} rounded-full flex items-center justify-center mb-4 ${col.color}`}><Icon name="Ghost" size={28} /></div>
+                                                                    <span className="text-sm font-semibold text-slate-500">Nenhum item</span>
+                                                                </div>
+                                                            )}
+                                                            {colOrders.map(order => <OrderCard key={order.id} order={order} onAction={handleOrderAction} onDelete={handleDeleteOrder} />)}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- STOCK / FILAMENTS VIEW --- */}
+                            {view === 'stock' && (
+                                <div className="max-w-7xl mx-auto w-full animate-fade-in pb-12">
+                                    <div className="flex justify-between items-end mb-10">
+                                        <div>
+                                            <h2 className="text-3xl font-black text-white tracking-tight mb-1">Prateleira de Filamentos</h2>
+                                            <p className="text-slate-400 font-medium">Controle visual do seu estoque organizado por material.</p>
+                                        </div>
+                                        <Button onClick={() => setView('expenses')} variant="outline" className="hidden sm:flex">
+                                            <Icon name="Plus" size={16} /> Comprar Filamento
+                                        </Button>
+                                    </div>
+                                    <div className="space-y-16">
+                                        {FILAMENT_MATERIALS.map(material => {
+                                            const mats = filaments.filter(f => f.material === material);
+                                            if (mats.length === 0) return null;
+                                            return (
+                                                <div key={material} className="relative pt-6">
+                                                    <div className="absolute top-0 left-6 bg-slate-800 border border-slate-700 px-6 py-1.5 rounded-t-xl z-10 text-slate-300 font-black tracking-widest uppercase text-sm shadow-md">{material}</div>
+                                                    <div className="relative bg-slate-900/40 backdrop-blur-md border border-slate-700/50 rounded-3xl rounded-tl-none p-6 pt-10 overflow-hidden shadow-2xl">
+                                                        <div className="absolute bottom-[42px] left-0 right-0 h-4 bg-gradient-to-b from-[#d4a373] to-[#b58c5c] border-y border-[#8b653c] shadow-inner z-0"></div>
+                                                        <div className="absolute bottom-4 left-0 right-0 h-4 bg-gradient-to-b from-[#b58c5c] to-[#8b653c] border-y border-[#5e4122] shadow-[inset_0_4px_6px_rgba(0,0,0,0.3)] z-0"></div>
+                                                        <div className="relative z-10 flex items-end gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                                                            {mats.map(filament => {
+                                                                const percent = filament.weight_current / filament.weight_initial;
+                                                                return (
+                                                                    <div key={filament.id} className="relative group cursor-pointer" onClick={() => openSpoolHistory(filament)}>
+                                                                        <FilamentSpool color={filament.color} percent={percent} />
+                                                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteFilament(filament.id); }} className="absolute -top-3 -right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20 shadow-lg hover:bg-red-400 hover:scale-110"><Icon name="X" size={12} /></button>
+                                                                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-950 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none border border-slate-700 shadow-xl flex flex-col items-center">
+                                                                            <span className="font-bold text-slate-200">{filament.name}</span>
+                                                                            <span className={`${percent < 0.2 ? 'text-red-400' : 'text-emerald-400'} font-black`}>{filament.weight_current.toFixed(0)}g</span>
+                                                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-950 border-b border-r border-slate-700 rotate-45"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- NEW ORDER VIEW --- */}
+                            {view === 'new-order' && (
+                                <div className="flex justify-center items-start animate-fade-in">
+                                    <div className="w-full max-w-3xl">
+                                        <button onClick={() => setView('kanban')} className="flex items-center gap-2 text-slate-400 hover:text-emerald-400 font-semibold mb-8 transition-colors group">
+                                            <div className="w-8 h-8 bg-slate-800 group-hover:bg-emerald-500/20 rounded-full flex items-center justify-center border border-transparent group-hover:border-emerald-500/30 transition-all"><Icon name="ArrowLeft" size={16} /></div>
+                                            Voltar aos Pedidos
+                                        </button>
+                                        <div className="bg-slate-900/60 backdrop-blur-xl p-8 sm:p-10 rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px]"></div>
+                                            <div className="flex items-center gap-4 mb-10 border-b border-slate-800 pb-6 relative z-10">
+                                                <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center border border-emerald-500/30"><Icon name="PlusCircle" size={24} /></div>
+                                                <div>
+                                                    <h2 className="text-2xl font-black text-white">Registrar Novo Pedido</h2>
+                                                    <p className="text-slate-400 text-sm font-medium mt-1">Preencha os dados do cliente e do projeto.</p>
+                                                </div>
+                                            </div>
+                                            <form onSubmit={handleAddOrder} className="relative z-10 space-y-6">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <Input label="Nome do Cliente" value={newOrder.client} onChange={e => setNewOrder({...newOrder, client: e.target.value})} placeholder="Ex: João da Silva" required />
+                                                    <Input label="WhatsApp (com DDD)" value={newOrder.phone} onChange={e => setNewOrder({...newOrder, phone: e.target.value})} placeholder="(11) 99999-9999" />
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <Input label="Valor do Projeto (R$)" type="number" step="0.01" value={newOrder.price} onChange={e => setNewOrder({...newOrder, price: e.target.value})} placeholder="0.00" />
+                                                    <Input label="Link Pagamento (Opcional)" value={newOrder.paymentLink} onChange={e => setNewOrder({...newOrder, paymentLink: e.target.value})} placeholder="https://mercadopago.com/..." />
+                                                </div>
+                                                <div className="pt-2">
+                                                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Descrição Detalhada do Projeto</label>
+                                                    <textarea value={newOrder.description} onChange={e => setNewOrder({...newOrder, description: e.target.value})} placeholder="Cor, material, quantidade, medidas..." required rows="4" className="w-full bg-slate-950/50 border border-slate-700/50 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-3 text-white placeholder-slate-600 transition-all outline-none resize-none shadow-inner custom-scrollbar"></textarea>
+                                                </div>
+                                                <div className="mt-10 flex gap-4 pt-6 border-t border-slate-800">
+                                                    <Button variant="ghost" className="flex-1 py-4" onClick={() => setView('kanban')}>Cancelar</Button>
+                                                    <Button type="submit" className="flex-[2] py-4 text-base shadow-emerald-500/20">
+                                                        <Icon name="Check" size={20}/> Salvar e Criar Pedido
+                                                    </Button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* --- EXPENSES VIEW --- */}
+                            {view === 'expenses' && (
+                                <div className="max-w-6xl mx-auto w-full animate-fade-in">
+                                    <div className="mb-8">
+                                        <h2 className="text-3xl font-black text-white tracking-tight mb-1">Gestão de Despesas</h2>
+                                        <p className="text-slate-400 font-medium">Controle seus custos com estoque, logística e manutenção.</p>
+                                    </div>
+                                    <div className="flex flex-col lg:flex-row gap-8">
+                                        <div className="lg:w-1/3">
+                                            <div className="bg-slate-900/60 backdrop-blur-xl p-8 rounded-3xl border border-white/5 sticky top-8 shadow-2xl relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-[60px]"></div>
+                                                <h3 className="font-bold text-white mb-8 flex items-center gap-3 text-lg">
+                                                    <div className="w-10 h-10 bg-red-500/20 rounded-xl flex items-center justify-center border border-red-500/30"><Icon name="MinusCircle" className="text-red-400" size={20} /></div>
+                                                    Nova Saída
+                                                </h3>
+                                                <form onSubmit={handleAddExpense} className="space-y-5 relative z-10">
+                                                    <Select label="Categoria" value={newExpense.category} onChange={e => setNewExpense({...newExpense, category: e.target.value})}>
+                                                        {EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                                    </Select>
+                                                    {newExpense.category === 'Filamento' ? (
+                                                        <div className="space-y-5 animate-fade-in bg-slate-950/40 p-4 rounded-2xl border border-slate-800">
+                                                            <div className="flex items-center gap-2 mb-2 text-emerald-400 text-xs font-bold uppercase tracking-widest"><Icon name="Disc" size={14} /> Novo Estoque</div>
+                                                            <Select label="Material" value={newExpense.filamentMaterial} onChange={e => setNewExpense({...newExpense, filamentMaterial: e.target.value})}>{FILAMENT_MATERIALS.map(mat => <option key={mat} value={mat}>{mat}</option>)}</Select>
+                                                            <Input label="Marca / Modelo" value={newExpense.description} onChange={e => setNewExpense({...newExpense, description: e.target.value})} placeholder="Ex: Esun Premium" required />
+                                                            <div className="flex gap-4">
+                                                                <Input className="flex-1 mb-0" label="Peso (KG)" type="number" step="0.01" value={newExpense.filamentWeightKg} onChange={e => setNewExpense({...newExpense, filamentWeightKg: e.target.value})} placeholder="1.0" required />
+                                                                <div className="w-16 shrink-0">
+                                                                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Cor</label>
+                                                                    <input type="color" value={newExpense.filamentColor} onChange={e => setNewExpense({...newExpense, filamentColor: e.target.value})} className="w-full h-[46px] rounded-xl bg-slate-900 border border-slate-700 cursor-pointer p-1" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <Input label="Descrição do Gasto" value={newExpense.description} onChange={e => setNewExpense({...newExpense, description: e.target.value})} placeholder="Ex: Plástico Bolha" required />
+                                                    )}
+                                                    <Input label="Valor Total (R$)" type="number" step="0.01" value={newExpense.amount} onChange={e => setNewExpense({...newExpense, amount: e.target.value})} placeholder="0.00" required />
+                                                    <Button type="submit" variant="danger" className="w-full py-4 mt-4 font-bold tracking-wide">
+                                                        <Icon name="TrendingDown" size={18}/> Lançar Despesa
+                                                    </Button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="lg:w-2/3">
+                                            <div className="bg-slate-900/60 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl overflow-hidden flex flex-col h-full min-h-[500px]">
+                                                <div className="p-6 sm:p-8 border-b border-slate-800 bg-slate-800/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                                    <div>
+                                                        <h3 className="font-bold text-white text-lg">Histórico de Saídas</h3>
+                                                        <p className="text-xs text-slate-400 mt-1">Todas as despesas registradas</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/20 shadow-inner">
+                                                        <Icon name="CreditCard" className="text-red-400" size={18}/>
+                                                        <span className="text-red-400 font-black text-lg">R$ {cost.toFixed(2)}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar space-y-3">
+                                                    {expenses.map(expense => (
+                                                        <div key={expense.id} className="bg-slate-800/40 border border-slate-700/50 p-5 rounded-2xl flex items-center justify-between hover:bg-slate-700/40 hover:border-slate-600/50 transition-all group">
+                                                            <div className="flex items-center gap-4">
+                                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center border shrink-0 ${expense.category === 'Filamento' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-slate-900 border-slate-700 text-slate-400'}`}>
+                                                                    <Icon name={expense.category === 'Filamento' ? 'Disc' : 'Receipt'} size={16} />
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-bold text-slate-200 text-sm sm:text-base">{expense.description}</p>
+                                                                    <p className="text-xs text-slate-500 font-medium mt-0.5">{new Date(expense.date).toLocaleDateString('pt-BR', {day:'2-digit', month:'short', year:'numeric'})} • {expense.category}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+                                                                <span className="font-black text-red-400 tracking-wide">- R$ {parseFloat(expense.amount).toFixed(2)}</span>
+                                                                <button onClick={() => handleDeleteExpense(expense.id)} className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-slate-500 hover:bg-red-500/20 hover:text-red-400 border border-slate-700 hover:border-red-500/30 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
+                                                                    <Icon name="Trash2" size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </main>
+
+                    {/* Modals da Aplicação */}
+                    <Modal isOpen={printModalOpen} onClose={() => setPrintModalOpen(false)} title="Registrar Uso de Material">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(16,185,129,0.4)]"><Icon name="Printer" size={28} /></div>
+                            <h4 className="font-bold text-white text-lg mb-2">Enviar para Impressão</h4>
+                            <p className="text-slate-400 text-sm leading-relaxed">Selecione qual filamento será usado neste pedido para abatermos do seu estoque e calcularmos o custo.</p>
+                        </div>
+                        {filaments.length > 0 ? (
+                            <div className="space-y-4">
+                                <Select label="Filamento Utilizado" value={printFilamentId} onChange={e => setPrintFilamentId(e.target.value)}>
+                                    {filaments.map(f => <option key={f.id} value={f.id}>[{f.material}] {f.name} ({f.weight_current.toFixed(0)}g restam)</option>)}
+                                </Select>
+                                <Input label="Quantidade Gasta (Gramas)" type="number" value={printWeight} onChange={(e) => setPrintWeight(e.target.value)} placeholder="Ex: 150" />
+                            </div>
+                        ) : (
+                            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 text-center"><p className="text-yellow-400 text-sm font-medium">Você ainda não tem filamentos cadastrados no estoque.</p></div>
+                        )}
+                        <div className="flex gap-3 mt-8">
+                            <Button variant="ghost" className="flex-1 py-3" onClick={() => setPrintModalOpen(false)}>Cancelar</Button>
+                            <Button variant="primary" className="flex-[2] py-3 text-sm" onClick={confirmPrintAndDeductStock}><Icon name="CheckCircle" size={18} /> Iniciar Impressão</Button>
+                        </div>
+                    </Modal>
+
+                    <Modal isOpen={historyModalOpen} onClose={() => setHistoryModalOpen(false)} title="Histórico do Filamento">
+                        {selectedSpoolForHistory && (() => {
+                            const spoolOrders = orders.filter(o => o.filament_id == selectedSpoolForHistory.id);
+                            const totalUsed = spoolOrders.reduce((sum, o) => sum + parseFloat(o.filament_weight || 0), 0);
+                            const totalProfit = spoolOrders.reduce((sum, o) => sum + parseFloat(o.price || 0), 0);
+                            return (
+                                <div>
+                                    <div className="flex items-center gap-4 mb-6 bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+                                        <FilamentSpool color={selectedSpoolForHistory.color} percent={selectedSpoolForHistory.weight_current / selectedSpoolForHistory.weight_initial} />
+                                        <div>
+                                            <h4 className="font-bold text-white text-lg leading-tight mb-1">[{selectedSpoolForHistory.material}] {selectedSpoolForHistory.name}</h4>
+                                            <p className="text-sm text-slate-400">Total impresso: <b className="text-emerald-400">{totalUsed}g</b></p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <h5 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Pedidos Vinculados</h5>
+                                        {spoolOrders.length === 0 ? (
+                                            <p className="text-slate-500 text-center py-6">Nenhum pedido usou este rolo ainda.</p>
+                                        ) : (
+                                            spoolOrders.map(order => (
+                                                <div key={order.id} className="bg-slate-900/50 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+                                                    <div className="min-w-0 pr-4">
+                                                        <p className="font-bold text-slate-200 text-sm truncate">{order.description}</p>
+                                                        <p className="text-xs text-slate-500 mt-1">{order.client} • {new Date(order.date).toLocaleDateString()}</p>
+                                                    </div>
+                                                    <div className="shrink-0 text-right">
+                                                        <p className="text-sm font-black text-emerald-400">{order.filament_weight}g</p>
+                                                        <p className="text-[10px] text-slate-500 font-bold">R$ {order.price}</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                    <div className="mt-6 pt-6 border-t border-slate-800 flex justify-between items-center">
+                                        <span className="text-slate-400 text-xs font-bold uppercase">Receita Gerada</span>
+                                        <span className="text-lg font-black text-white">R$ {totalProfit.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                    </Modal>
+
+                    <Modal isOpen={linkModalOpen} onClose={() => setLinkModalOpen(false)} title="Enviar Link de Pagamento">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(59,130,246,0.4)]"><Icon name="Link" size={28} /></div>
+                            <h4 className="font-bold text-white text-lg mb-2">Cobrança de {editingOrder?.client}</h4>
+                        </div>
+                        <Input label="URL do Pagamento" value={tempLink} onChange={(e) => setTempLink(e.target.value)} placeholder="https://..." autoFocus />
+                        <div className="flex gap-3 mt-8">
+                            <Button variant="ghost" className="flex-1 py-3" onClick={() => setLinkModalOpen(false)}>Cancelar</Button>
+                            <Button variant="whatsapp" className="flex-[2] py-3 text-sm" onClick={confirmLinkAndSend}><Icon name="Send" size={18} /> Salvar e Enviar</Button>
+                        </div>
+                    </Modal>
+
+                    <Modal isOpen={shippingModalOpen} onClose={() => setShippingModalOpen(false)} title="Finalizar Entrega">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(16,185,129,0.4)]"><Icon name="Truck" size={28} /></div>
+                            <h4 className="font-bold text-white text-lg mb-2">Pedido de {editingOrder?.client}</h4>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3 mb-6">
+                            <button onClick={() => setShippingMethod('pickup')} className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${shippingMethod === 'pickup' ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-800'}`}><Icon name="Store" size={20} /><span className="text-xs font-bold">Retirada</span></button>
+                            <button onClick={() => setShippingMethod('correios')} className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${shippingMethod === 'correios' ? 'bg-blue-500/20 border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]' : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-800'}`}><Icon name="Package" size={20} /><span className="text-xs font-bold">Correios</span></button>
+                            <button onClick={() => setShippingMethod('arrange')} className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${shippingMethod === 'arrange' ? 'bg-purple-500/20 border-purple-500/50 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.2)]' : 'bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-800'}`}><Icon name="MessageCircle" size={20} /><span className="text-xs font-bold">Combinar</span></button>
+                        </div>
+                        {shippingMethod === 'correios' && (
+                            <div className="animate-fade-in"><Input label="Código de Rastreio" value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} placeholder="Ex: BR123456789BR" autoFocus /></div>
+                        )}
+                        <div className="flex gap-3 mt-8">
+                            <Button variant="ghost" className="flex-1 py-3" onClick={() => setShippingModalOpen(false)}>Cancelar</Button>
+                            <Button variant="whatsapp" className="flex-[2] py-3 text-sm" onClick={confirmShippingAndSend} disabled={shippingMethod === 'correios' && !trackingCode.trim()}><Icon name="Send" size={18} /> Avisar Cliente</Button>
+                        </div>
+                    </Modal>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MainApp />);
+    </script>
+</body>
+</html>

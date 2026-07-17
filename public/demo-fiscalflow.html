@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>FiscalFlow — Demonstração</title>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      :root {
+        --background: #07111f;
+        --background-soft: #0b1728;
+        --sidebar: rgba(8, 19, 34, 0.96);
+        --card: rgba(15, 31, 52, 0.78);
+        --card-light: rgba(24, 47, 75, 0.68);
+        --border: rgba(148, 191, 255, 0.12);
+        --border-strong: rgba(96, 165, 250, 0.3);
+        --blue: #3b82f6;
+        --blue-light: #60a5fa;
+        --cyan: #22d3ee;
+        --green: #22c55e;
+        --yellow: #f59e0b;
+        --red: #ef4444;
+        --purple: #a78bfa;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --muted-light: #cbd5e1;
+        --shadow: 0 18px 55px rgba(0, 0, 0, 0.28);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        min-height: 100vh;
+        overflow-x: hidden;
+        color: var(--text);
+        background:
+          radial-gradient(
+            circle at 90% 0%,
+            rgba(37, 99, 235, 0.16),
+            transparent 35%
+          ),
+          radial-gradient(
+            circle at 0% 100%,
+            rgba(34, 211, 238, 0.08),
+            transparent 30%
+          ),
+          var(--background);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .app {
+        display: grid;
+        min-height: 100vh;
+        grid-template-columns: 235px minmax(0, 1fr);
+      }
+
+      .sidebar {
+        position: sticky;
+        z-index: 20;
+        top: 0;
+        height: 100vh;
+        padding: 22px 15px;
+        border-right: 1px solid var(--border);
+        background: var(--sidebar);
+        backdrop-filter: blur(20px);
+      }
+
+      .brand {
+        display: flex;
+        gap: 11px;
+        align-items: center;
+        padding: 0 8px 24px;
+      }
+
+      .brand-icon {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        border: 1px solid rgba(96, 165, 250, 0.35);
+        border-radius: 13px;
+        place-items: center;
+        background: linear-gradient(
+          145deg,
+          rgba(37, 99, 235, 0.9),
+          rgba(14, 165, 233, 0.72)
+        );
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+      }
+
+      .brand-icon svg {
+        width: 21px;
+        height: 21px;
+      }
+
+      .brand-name strong {
+        display: block;
+        font-size: 1rem;
+      }
+
+      .brand-name span {
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+
+      .sidebar-label {
+        padding: 11px 11px 8px;
+        color: #64748b;
+        font-size: 0.67rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .menu {
+        display: flex;
+        gap: 5px;
+        flex-direction: column;
+      }
+
+      .menu-item {
+        display: flex;
+        width: 100%;
+        gap: 10px;
+        align-items: center;
+        padding: 11px 12px;
+        border: 1px solid transparent;
+        border-radius: 11px;
+        color: var(--muted);
+        background: transparent;
+        text-align: left;
+        transition: 0.2s ease;
+      }
+
+      .menu-item svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .menu-item:hover {
+        color: #ffffff;
+        background: rgba(96, 165, 250, 0.08);
+      }
+
+      .menu-item.active {
+        color: #ffffff;
+        border-color: rgba(96, 165, 250, 0.16);
+        background: rgba(59, 130, 246, 0.13);
+      }
+
+      .sidebar-footer {
+        position: absolute;
+        right: 15px;
+        bottom: 20px;
+        left: 15px;
+      }
+
+      .user-card {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        background: rgba(15, 31, 52, 0.62);
+      }
+
+      .avatar {
+        display: grid;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        color: #dbeafe;
+        background: rgba(59, 130, 246, 0.25);
+        font-size: 0.78rem;
+        font-weight: 700;
+        place-items: center;
+      }
+
+      .user-info strong {
+        display: block;
+        font-size: 0.8rem;
+      }
+
+      .user-info span {
+        color: var(--muted);
+        font-size: 0.7rem;
+      }
+
+      .main {
+        min-width: 0;
+        padding: 24px;
+      }
+
+      .topbar {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+      }
+
+      .page-title h1 {
+        margin-bottom: 4px;
+        font-size: 1.55rem;
+      }
+
+      .page-title p {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .topbar-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .date-label {
+        display: flex;
+        gap: 7px;
+        align-items: center;
+        padding: 10px 13px;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        color: var(--muted-light);
+        background: rgba(15, 31, 52, 0.65);
+        font-size: 0.78rem;
+      }
+
+      .date-label svg {
+        width: 16px;
+        height: 16px;
+        color: var(--blue-light);
+      }
+
+      .primary-button {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 11px;
+        color: #ffffff;
+        background: linear-gradient(135deg, var(--blue), #2563eb);
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+        font-size: 0.79rem;
+        font-weight: 700;
+      }
+
+      .primary-button svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .primary-button:hover {
+        filter: brightness(1.08);
+      }
+
+      .filters {
+        display: grid;
+        gap: 11px;
+        margin-bottom: 18px;
+        grid-template-columns: minmax(210px, 1.3fr) repeat(3, minmax(135px, 0.7fr));
+      }
+
+      .input-wrapper {
+        position: relative;
+      }
+
+      .input-wrapper svg {
+        position: absolute;
+        top: 50%;
+        left: 12px;
+        width: 16px;
+        height: 16px;
+        color: var(--muted);
+        transform: translateY(-50%);
+      }
+
+      .filter-control {
+        width: 100%;
+        min-height: 42px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        outline: none;
+        color: var(--muted-light);
+        background: rgba(15, 31, 52, 0.65);
+        font-size: 0.78rem;
+      }
+
+      .input-wrapper .filter-control {
+        padding-left: 38px;
+      }
+
+      .filter-control:focus {
+        border-color: var(--border-strong);
+      }
+
+      select.filter-control option {
+        color: #ffffff;
+        background: #0f1f34;
+      }
+
+      .page-section {
+        display: none;
+        animation: fadeIn 0.25s ease;
+      }
+
+      .page-section.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .kpi-grid {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 16px;
+        grid-template-columns: repeat(4, minmax(155px, 1fr));
+      }
+
+      .kpi-card {
+        position: relative;
+        overflow: hidden;
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+      }
+
+      .kpi-card::after {
+        position: absolute;
+        top: -30px;
+        right: -30px;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        content: "";
+        background: rgba(59, 130, 246, 0.08);
+      }
+
+      .kpi-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .kpi-title {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+
+      .kpi-icon {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        border: 1px solid rgba(96, 165, 250, 0.16);
+        border-radius: 10px;
+        place-items: center;
+        background: rgba(96, 165, 250, 0.08);
+      }
+
+      .kpi-icon svg {
+        width: 16px;
+        height: 16px;
+        color: var(--blue-light);
+      }
+
+      .kpi-value {
+        margin-bottom: 6px;
+        color: #ffffff;
+        font-size: 1.35rem;
+        font-weight: 800;
+      }
+
+      .kpi-caption {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        color: var(--muted);
+        font-size: 0.67rem;
+      }
+
+      .positive {
+        color: var(--green);
+      }
+
+      .warning {
+        color: var(--yellow);
+      }
+
+      .danger {
+        color: var(--red);
+      }
+
+      .dashboard-grid {
+        display: grid;
+        gap: 15px;
+        grid-template-columns: minmax(0, 1.45fr) minmax(250px, 0.8fr);
+      }
+
+      .dashboard-column {
+        display: flex;
+        min-width: 0;
+        gap: 15px;
+        flex-direction: column;
+      }
+
+      .panel {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card);
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 19px;
+      }
+
+      .panel-title h2 {
+        margin-bottom: 4px;
+        font-size: 0.95rem;
+      }
+
+      .panel-title p {
+        color: var(--muted);
+        font-size: 0.68rem;
+      }
+
+      .panel-action {
+        border: 0;
+        color: var(--blue-light);
+        background: transparent;
+        font-size: 0.7rem;
+      }
+
+      .bar-chart {
+        display: flex;
+        height: 195px;
+        gap: 11px;
+        align-items: flex-end;
+        padding: 8px 4px 2px;
+        border-bottom: 1px solid rgba(148, 191, 255, 0.08);
+      }
+
+      .bar-column {
+        display: flex;
+        height: 100%;
+        min-width: 24px;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .bar-value {
+        margin-bottom: 7px;
+        color: var(--muted);
+        font-size: 0.6rem;
+      }
+
+      .bar {
+        width: 72%;
+        max-width: 34px;
+        min-height: 8px;
+        border-radius: 8px 8px 3px 3px;
+        background: linear-gradient(
+          180deg,
+          var(--blue-light),
+          rgba(37, 99, 235, 0.55)
+        );
+        transition: height 0.35s ease;
+      }
+
+      .bar-label {
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 0.6rem;
+      }
+
+      .status-list {
+        display: flex;
+        gap: 12px;
+        flex-direction: column;
+      }
+
+      .status-item {
+        display: grid;
+        gap: 10px;
+        align-items: center;
+        grid-template-columns: auto 1fr auto;
+      }
+
+      .status-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+      }
+
+      .status-content strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 0.76rem;
+      }
+
+      .status-content span {
+        color: var(--muted);
+        font-size: 0.64rem;
+      }
+
+      .status-number {
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      .progress {
+        overflow: hidden;
+        height: 6px;
+        margin-top: 7px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.1);
+      }
+
+      .progress-value {
+        height: 100%;
+        border-radius: inherit;
+        background: var(--blue);
+      }
+
+      .supplier-list {
+        display: flex;
+        gap: 9px;
+        flex-direction: column;
+      }
+
+      .supplier-item {
+        display: grid;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid rgba(148, 191, 255, 0.08);
+        border-radius: 11px;
+        background: rgba(15, 31, 52, 0.5);
+        grid-template-columns: 28px 1fr auto;
+      }
+
+      .supplier-position {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        color: var(--blue-light);
+        background: rgba(59, 130, 246, 0.12);
+        font-size: 0.68rem;
+        font-weight: 800;
+        place-items: center;
+      }
+
+      .supplier-name strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 0.73rem;
+      }
+
+      .supplier-name span {
+        color: var(--muted);
+        font-size: 0.61rem;
+      }
+
+      .supplier-value {
+        color: var(--muted-light);
+        font-size: 0.67rem;
+        font-weight: 700;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        min-width: 800px;
+        border-collapse: collapse;
+      }
+
+      th {
+        padding: 11px 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--muted);
+        text-align: left;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      td {
+        padding: 12px 10px;
+        border-bottom: 1px solid rgba(148, 191, 255, 0.06);
+        color: var(--muted-light);
+        font-size: 0.7rem;
+      }
+
+      tbody tr {
+        transition: background 0.18s ease;
+      }
+
+      tbody tr:hover {
+        background: rgba(96, 165, 250, 0.05);
+      }
+
+      .supplier-cell strong {
+        display: block;
+        margin-bottom: 3px;
+        color: #ffffff;
+        font-size: 0.72rem;
+      }
+
+      .supplier-cell span {
+        color: var(--muted);
+        font-size: 0.61rem;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 8px;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 700;
+      }
+
+      .badge.processada {
+        color: #86efac;
+        background: rgba(34, 197, 94, 0.12);
+      }
+
+      .badge.vencendo {
+        color: #fcd34d;
+        background: rgba(245, 158, 11, 0.12);
+      }
+
+      .badge.atrasada {
+        color: #fca5a5;
+        background: rgba(239, 68, 68, 0.12);
+      }
+
+      .badge.duplicada {
+        color: #c4b5fd;
+        background: rgba(139, 92, 246, 0.12);
+      }
+
+      .action-button {
+        display: grid;
+        width: 29px;
+        height: 29px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--muted-light);
+        background: rgba(15, 31, 52, 0.7);
+        place-items: center;
+      }
+
+      .action-button svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .suppliers-page-grid {
+        display: grid;
+        gap: 15px;
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+      }
+
+      .supplier-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--card);
+      }
+
+      .supplier-card-top {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 17px;
+      }
+
+      .supplier-logo {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        color: var(--blue-light);
+        background: rgba(59, 130, 246, 0.12);
+        font-size: 0.73rem;
+        font-weight: 800;
+        place-items: center;
+      }
+
+      .supplier-card-top strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.8rem;
+      }
+
+      .supplier-card-top span {
+        color: var(--muted);
+        font-size: 0.65rem;
+      }
+
+      .supplier-stats {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .supplier-stat {
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(96, 165, 250, 0.05);
+      }
+
+      .supplier-stat span {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--muted);
+        font-size: 0.6rem;
+      }
+
+      .supplier-stat strong {
+        font-size: 0.75rem;
+      }
+
+      .empty-state {
+        padding: 55px 20px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .empty-state svg {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 12px;
+        color: #475569;
+      }
+
+      .empty-state strong {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--muted-light);
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        z-index: 100;
+        display: none;
+        inset: 0;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(2, 6, 23, 0.75);
+        backdrop-filter: blur(8px);
+      }
+
+      .modal-backdrop.active {
+        display: flex;
+      }
+
+      .modal {
+        width: min(530px, 100%);
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 23px;
+        border: 1px solid var(--border-strong);
+        border-radius: 18px;
+        background: #0c1a2c;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+      }
+
+      .modal-header {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      .modal-header h2 {
+        font-size: 1rem;
+      }
+
+      .close-button {
+        display: grid;
+        width: 31px;
+        height: 31px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--muted-light);
+        background: rgba(255, 255, 255, 0.03);
+        place-items: center;
+      }
+
+      .close-button svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .detail-grid {
+        display: grid;
+        gap: 11px;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .detail-item {
+        padding: 12px;
+        border-radius: 11px;
+        background: rgba(96, 165, 250, 0.06);
+      }
+
+      .detail-item.full {
+        grid-column: 1 / -1;
+      }
+
+      .detail-item span {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--muted);
+        font-size: 0.62rem;
+      }
+
+      .detail-item strong {
+        color: var(--muted-light);
+        font-size: 0.75rem;
+        word-break: break-word;
+      }
+
+      .toast {
+        position: fixed;
+        z-index: 150;
+        right: 22px;
+        bottom: 22px;
+        display: flex;
+        visibility: hidden;
+        gap: 10px;
+        align-items: center;
+        max-width: 340px;
+        padding: 13px 16px;
+        border: 1px solid rgba(34, 197, 94, 0.25);
+        border-radius: 12px;
+        opacity: 0;
+        color: #dcfce7;
+        background: rgba(20, 83, 45, 0.95);
+        box-shadow: var(--shadow);
+        font-size: 0.75rem;
+        transform: translateY(12px);
+        transition: 0.25s ease;
+      }
+
+      .toast.active {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .toast svg {
+        width: 17px;
+        height: 17px;
+      }
+
+      .mobile-menu {
+        display: none;
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: #ffffff;
+        background: rgba(15, 31, 52, 0.8);
+        place-items: center;
+      }
+
+      .mobile-menu svg {
+        width: 19px;
+        height: 19px;
+      }
+
+      @media (max-width: 1050px) {
+        .kpi-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .suppliers-page-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 820px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: fixed;
+          z-index: 80;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          width: 235px;
+          transform: translateX(-100%);
+          transition: transform 0.25s ease;
+        }
+
+        .sidebar.open {
+          transform: translateX(0);
+        }
+
+        .mobile-menu {
+          display: grid;
+        }
+
+        .main {
+          padding: 17px;
+        }
+
+        .filters {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .topbar {
+          align-items: flex-start;
+        }
+
+        .date-label {
+          display: none;
+        }
+      }
+
+      @media (max-width: 580px) {
+        .topbar-actions {
+          align-items: stretch;
+        }
+
+        .primary-button span {
+          display: none;
+        }
+
+        .filters,
+        .kpi-grid,
+        .suppliers-page-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .detail-item.full {
+          grid-column: auto;
+        }
+
+        .page-title h1 {
+          font-size: 1.25rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="brand-icon">
+            <i data-lucide="file-check-2"></i>
+          </div>
+
+          <div class="brand-name">
+            <strong>FiscalFlow</strong>
+            <span>Automação fiscal</span>
+          </div>
+        </div>
+
+        <div class="sidebar-label">Principal</div>
+
+        <nav class="menu">
+          <button
+            class="menu-item active"
+            data-page="overview"
+            data-title="Visão geral"
+          >
+            <i data-lucide="layout-dashboard"></i>
+            Visão geral
+          </button>
+
+          <button
+            class="menu-item"
+            data-page="suppliers"
+            data-title="Fornecedores"
+          >
+            <i data-lucide="building-2"></i>
+            Fornecedores
+          </button>
+
+          <button class="menu-item" data-page="invoices" data-title="Notas fiscais">
+            <i data-lucide="files"></i>
+            Notas fiscais
+          </button>
+        </nav>
+
+        <div class="sidebar-label">Sistema</div>
+
+        <nav class="menu">
+          <button class="menu-item" id="logsButton">
+            <i data-lucide="scroll-text"></i>
+            Logs de execução
+          </button>
+
+          <button class="menu-item" id="settingsButton">
+            <i data-lucide="settings"></i>
+            Configurações
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-card">
+            <div class="avatar">CR</div>
+
+            <div class="user-info">
+              <strong>Carina Ribeiro</strong>
+              <span>Administradora</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div style="display: flex; gap: 12px; align-items: center">
+            <button class="mobile-menu" id="mobileMenu">
+              <i data-lucide="menu"></i>
+            </button>
+
+            <div class="page-title">
+              <h1 id="pageTitle">Visão geral</h1>
+              <p>Indicadores do processamento de notas fiscais</p>
+            </div>
+          </div>
+
+          <div class="topbar-actions">
+            <div class="date-label">
+              <i data-lucide="calendar-days"></i>
+              <span id="currentDate"></span>
+            </div>
+
+            <button class="primary-button" id="processButton">
+              <i data-lucide="refresh-cw"></i>
+              <span>Processar e-mails</span>
+            </button>
+          </div>
+        </header>
+
+        <section class="filters">
+          <div class="input-wrapper">
+            <i data-lucide="search"></i>
+
+            <input
+              type="search"
+              class="filter-control"
+              id="searchInput"
+              placeholder="Pesquisar fornecedor ou número da NF..."
+            />
+          </div>
+
+          <select class="filter-control" id="branchFilter">
+            <option value="all">Todas as filiais</option>
+            <option value="BK">BK</option>
+            <option value="CLIA">CLIA</option>
+            <option value="MATRIZ">MATRIZ</option>
+            <option value="IPA">IPA</option>
+          </select>
+
+          <select class="filter-control" id="statusFilter">
+            <option value="all">Todos os status</option>
+            <option value="Processada">Processadas</option>
+            <option value="Vencendo">Vencendo</option>
+            <option value="Atrasada">Atrasadas</option>
+            <option value="Duplicada">Duplicadas</option>
+          </select>
+
+          <select class="filter-control" id="periodFilter">
+            <option value="all">Todo o período</option>
+            <option value="7">Últimos 7 dias</option>
+            <option value="15">Últimos 15 dias</option>
+            <option value="30" selected>Últimos 30 dias</option>
+          </select>
+        </section>
+
+        <!-- Visão geral -->
+        <section class="page-section active" id="overview">
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Notas processadas</span>
+
+                <div class="kpi-icon">
+                  <i data-lucide="file-check-2"></i>
+                </div>
+              </div>
+
+              <div class="kpi-value" id="kpiInvoices">0</div>
+
+              <div class="kpi-caption">
+                <span class="positive">↑ 12,5%</span>
+                <span>no período</span>
+              </div>
+            </article>
+
+            <article class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Valor total</span>
+
+                <div class="kpi-icon">
+                  <i data-lucide="circle-dollar-sign"></i>
+                </div>
+              </div>
+
+              <div class="kpi-value" id="kpiValue">R$ 0,00</div>
+
+              <div class="kpi-caption">
+                <span class="positive">↑ 8,3%</span>
+                <span>em documentos fiscais</span>
+              </div>
+            </article>
+
+            <article class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Vencendo em breve</span>
+
+                <div class="kpi-icon">
+                  <i data-lucide="clock-3"></i>
+                </div>
+              </div>
+
+              <div class="kpi-value" id="kpiDue">0</div>
+
+              <div class="kpi-caption">
+                <span class="warning">Atenção</span>
+                <span>próximos vencimentos</span>
+              </div>
+            </article>
+
+            <article class="kpi-card">
+              <div class="kpi-header">
+                <span class="kpi-title">Duplicidades</span>
+
+                <div class="kpi-icon">
+                  <i data-lucide="copy-x"></i>
+                </div>
+              </div>
+
+              <div class="kpi-value" id="kpiDuplicates">0</div>
+
+              <div class="kpi-caption">
+                <span class="positive">Bloqueadas</span>
+                <span>pela chave de acesso</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="dashboard-column">
+              <article class="panel">
+                <div class="panel-header">
+                  <div class="panel-title">
+                    <h2>Notas processadas por filial</h2>
+                    <p>Distribuição dos documentos no período selecionado</p>
+                  </div>
+
+                  <button class="panel-action" data-go-page="invoices">
+                    Ver notas
+                  </button>
+                </div>
+
+                <div class="bar-chart" id="branchChart"></div>
+              </article>
+
+              <article class="panel">
+                <div class="panel-header">
+                  <div class="panel-title">
+                    <h2>Notas fiscais recentes</h2>
+                    <p>Últimos registros incluídos pelo processamento</p>
+                  </div>
+
+                  <button class="panel-action" data-go-page="invoices">
+                    Ver todas
+                  </button>
+                </div>
+
+                <div class="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Fornecedor</th>
+                        <th>NF</th>
+                        <th>Filial</th>
+                        <th>Vencimento</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+
+                    <tbody id="recentTable"></tbody>
+                  </table>
+                </div>
+              </article>
+            </div>
+
+            <div class="dashboard-column">
+              <article class="panel">
+                <div class="panel-header">
+                  <div class="panel-title">
+                    <h2>Status dos documentos</h2>
+                    <p>Situação atual das notas</p>
+                  </div>
+                </div>
+
+                <div class="status-list" id="statusList"></div>
+              </article>
+
+              <article class="panel">
+                <div class="panel-header">
+                  <div class="panel-title">
+                    <h2>Ranking de fornecedores</h2>
+                    <p>Maiores valores registrados</p>
+                  </div>
+
+                  <button class="panel-action" data-go-page="suppliers">
+                    Ver todos
+                  </button>
+                </div>
+
+                <div class="supplier-list" id="supplierRanking"></div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <!-- Fornecedores -->
+        <section class="page-section" id="suppliers">
+          <article class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <h2>Fornecedores</h2>
+                <p>Consolidação dos documentos por emissor</p>
+              </div>
+            </div>
+
+            <div class="suppliers-page-grid" id="suppliersGrid"></div>
+          </article>
+        </section>
+
+        <!-- Notas fiscais -->
+        <section class="page-section" id="invoices">
+          <article class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <h2>Notas fiscais</h2>
+                <p>Documentos processados pela automação</p>
+              </div>
+
+              <span
+                id="tableCounter"
+                style="color: var(--muted); font-size: 0.7rem"
+              ></span>
+            </div>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Fornecedor</th>
+                    <th>NF</th>
+                    <th>Filial</th>
+                    <th>Emissão</th>
+                    <th>Vencimento</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+
+                <tbody id="invoicesTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Detalhes da nota fiscal</h2>
+
+          <button class="close-button" id="closeModal">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div class="detail-grid" id="modalContent"></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">
+      <i data-lucide="circle-check"></i>
+      <span id="toastMessage"></span>
+    </div>
+
+    <script>
+      const invoices = [
+        {
+          id: "FF-001",
+          type: "Produto",
+          supplier: "Alfa Equipamentos Industriais",
+          cnpjSupplier: "12.345.678/0001-90",
+          invoice: "45821",
+          accessKey:
+            "35260712345678000190550010000458211000045821",
+          branch: "BK",
+          branchCnpj: "58.188.756/0012-49",
+          issueDate: "2026-07-15",
+          dueDate: "2026-07-25",
+          value: 18450.9,
+          status: "Processada",
+          subject: "NF-e 45821 - Alfa Equipamentos",
+        },
+        {
+          id: "FF-002",
+          type: "Serviço",
+          supplier: "Porto Service Manutenção",
+          cnpjSupplier: "23.456.789/0001-20",
+          invoice: "9527",
+          accessKey:
+            "35260723456789000120550010000095271000009527",
+          branch: "CLIA",
+          branchCnpj: "58.188.756/0022-10",
+          issueDate: "2026-07-14",
+          dueDate: "2026-07-20",
+          value: 8940,
+          status: "Vencendo",
+          subject: "Nota Fiscal de Serviço 9527",
+        },
+        {
+          id: "FF-003",
+          type: "Produto",
+          supplier: "Tech Parts Brasil",
+          cnpjSupplier: "34.567.890/0001-31",
+          invoice: "78954",
+          accessKey:
+            "35260734567890000131550010000789541000078954",
+          branch: "MATRIZ",
+          branchCnpj: "58.188.756/0001-96",
+          issueDate: "2026-07-12",
+          dueDate: "2026-08-11",
+          value: 32780.45,
+          status: "Processada",
+          subject: "DANFE / XML - Pedido 2026-078",
+        },
+        {
+          id: "FF-004",
+          type: "Serviço",
+          supplier: "Logística Litoral",
+          cnpjSupplier: "45.678.901/0001-42",
+          invoice: "1845",
+          accessKey:
+            "35260745678901000142550010000018451000001845",
+          branch: "IPA",
+          branchCnpj: "58.188.756/0002-77",
+          issueDate: "2026-07-10",
+          dueDate: "2026-07-16",
+          value: 12650,
+          status: "Atrasada",
+          subject: "Envio de Nota Fiscal 1845",
+        },
+        {
+          id: "FF-005",
+          type: "Produto",
+          supplier: "Suprimentos Costa Azul",
+          cnpjSupplier: "56.789.012/0001-53",
+          invoice: "33012",
+          accessKey:
+            "35260756789012000153550010000330121000033012",
+          branch: "BK",
+          branchCnpj: "58.188.756/0012-49",
+          issueDate: "2026-07-09",
+          dueDate: "2026-08-08",
+          value: 5780.75,
+          status: "Processada",
+          subject: "XML NF-e 33012",
+        },
+        {
+          id: "FF-006",
+          type: "Produto",
+          supplier: "Alfa Equipamentos Industriais",
+          cnpjSupplier: "12.345.678/0001-90",
+          invoice: "45809",
+          accessKey:
+            "35260712345678000190550010000458091000045809",
+          branch: "CLIA",
+          branchCnpj: "58.188.756/0022-10",
+          issueDate: "2026-07-08",
+          dueDate: "2026-07-23",
+          value: 22190.3,
+          status: "Vencendo",
+          subject: "NF-e 45809",
+        },
+        {
+          id: "FF-007",
+          type: "Serviço",
+          supplier: "Santos Tecnologia",
+          cnpjSupplier: "67.890.123/0001-64",
+          invoice: "7708",
+          accessKey:
+            "35260767890123000164550010000077081000007708",
+          branch: "MATRIZ",
+          branchCnpj: "58.188.756/0001-96",
+          issueDate: "2026-07-06",
+          dueDate: "2026-07-21",
+          value: 4500,
+          status: "Vencendo",
+          subject: "Nota Fiscal - Contrato de suporte",
+        },
+        {
+          id: "FF-008",
+          type: "Produto",
+          supplier: "Tech Parts Brasil",
+          cnpjSupplier: "34.567.890/0001-31",
+          invoice: "78880",
+          accessKey:
+            "35260734567890000131550010000788801000078880",
+          branch: "IPA",
+          branchCnpj: "58.188.756/0002-77",
+          issueDate: "2026-07-03",
+          dueDate: "2026-08-02",
+          value: 15440.8,
+          status: "Processada",
+          subject: "Documentos fiscais - Pedido 771",
+        },
+        {
+          id: "FF-009",
+          type: "Serviço",
+          supplier: "Porto Service Manutenção",
+          cnpjSupplier: "23.456.789/0001-20",
+          invoice: "9481",
+          accessKey:
+            "35260723456789000120550010000094811000009481",
+          branch: "BK",
+          branchCnpj: "58.188.756/0012-49",
+          issueDate: "2026-07-01",
+          dueDate: "2026-07-15",
+          value: 7290,
+          status: "Atrasada",
+          subject: "NFS-e 9481",
+        },
+        {
+          id: "FF-010",
+          type: "Produto",
+          supplier: "Suprimentos Costa Azul",
+          cnpjSupplier: "56.789.012/0001-53",
+          invoice: "32975",
+          accessKey:
+            "35260656789012000153550010000329751000032975",
+          branch: "CLIA",
+          branchCnpj: "58.188.756/0022-10",
+          issueDate: "2026-06-28",
+          dueDate: "2026-07-28",
+          value: 9630.4,
+          status: "Processada",
+          subject: "Nota Fiscal Eletrônica 32975",
+        },
+        {
+          id: "FF-011",
+          type: "Produto",
+          supplier: "Alfa Equipamentos Industriais",
+          cnpjSupplier: "12.345.678/0001-90",
+          invoice: "45760",
+          accessKey:
+            "35260612345678000190550010000457601000045760",
+          branch: "MATRIZ",
+          branchCnpj: "58.188.756/0001-96",
+          issueDate: "2026-06-25",
+          dueDate: "2026-07-25",
+          value: 27400,
+          status: "Duplicada",
+          subject: "Reenvio NF-e 45760",
+        },
+        {
+          id: "FF-012",
+          type: "Serviço",
+          supplier: "Logística Litoral",
+          cnpjSupplier: "45.678.901/0001-42",
+          invoice: "1809",
+          accessKey:
+            "35260645678901000142550010000018091000001809",
+          branch: "IPA",
+          branchCnpj: "58.188.756/0002-77",
+          issueDate: "2026-06-22",
+          dueDate: "2026-07-22",
+          value: 11870.2,
+          status: "Processada",
+          subject: "Documentos fiscais 1809",
+        },
+      ];
+
+      const state = {
+        page: "overview",
+        search: "",
+        branch: "all",
+        status: "all",
+        period: "30",
+      };
+
+      const elements = {
+        sidebar: document.getElementById("sidebar"),
+        pageTitle: document.getElementById("pageTitle"),
+        searchInput: document.getElementById("searchInput"),
+        branchFilter: document.getElementById("branchFilter"),
+        statusFilter: document.getElementById("statusFilter"),
+        periodFilter: document.getElementById("periodFilter"),
+        invoicesTable: document.getElementById("invoicesTable"),
+        recentTable: document.getElementById("recentTable"),
+        suppliersGrid: document.getElementById("suppliersGrid"),
+        supplierRanking: document.getElementById("supplierRanking"),
+        branchChart: document.getElementById("branchChart"),
+        statusList: document.getElementById("statusList"),
+        tableCounter: document.getElementById("tableCounter"),
+        modalBackdrop: document.getElementById("modalBackdrop"),
+        modalContent: document.getElementById("modalContent"),
+        toast: document.getElementById("toast"),
+        toastMessage: document.getElementById("toastMessage"),
+      };
+
+      function formatCurrency(value) {
+        return new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        }).format(value);
+      }
+
+      function formatDate(dateString) {
+        const [year, month, day] = dateString.split("-");
+
+        return `${day}/${month}/${year}`;
+      }
+
+      function getFilteredInvoices() {
+        const today = new Date("2026-07-17T12:00:00");
+
+        return invoices.filter((invoice) => {
+          const normalizedSearch = state.search.trim().toLowerCase();
+
+          const matchesSearch =
+            !normalizedSearch ||
+            invoice.supplier.toLowerCase().includes(normalizedSearch) ||
+            invoice.invoice.toLowerCase().includes(normalizedSearch) ||
+            invoice.id.toLowerCase().includes(normalizedSearch);
+
+          const matchesBranch =
+            state.branch === "all" || invoice.branch === state.branch;
+
+          const matchesStatus =
+            state.status === "all" || invoice.status === state.status;
+
+          let matchesPeriod = true;
+
+          if (state.period !== "all") {
+            const issueDate = new Date(`${invoice.issueDate}T12:00:00`);
+            const difference =
+              (today.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24);
+
+            matchesPeriod = difference <= Number(state.period);
+          }
+
+          return (
+            matchesSearch &&
+            matchesBranch &&
+            matchesStatus &&
+            matchesPeriod
+          );
+        });
+      }
+
+      function getStatusClass(status) {
+        const classes = {
+          Processada: "processada",
+          Vencendo: "vencendo",
+          Atrasada: "atrasada",
+          Duplicada: "duplicada",
+        };
+
+        return classes[status] || "processada";
+      }
+
+      function renderKPIs(filteredInvoices) {
+        const validInvoices = filteredInvoices.filter(
+          (invoice) => invoice.status !== "Duplicada",
+        );
+
+        const totalValue = validInvoices.reduce(
+          (total, invoice) => total + invoice.value,
+          0,
+        );
+
+        const dueCount = filteredInvoices.filter(
+          (invoice) => invoice.status === "Vencendo",
+        ).length;
+
+        const duplicateCount = filteredInvoices.filter(
+          (invoice) => invoice.status === "Duplicada",
+        ).length;
+
+        document.getElementById("kpiInvoices").textContent =
+          validInvoices.length;
+
+        document.getElementById("kpiValue").textContent =
+          formatCurrency(totalValue);
+
+        document.getElementById("kpiDue").textContent = dueCount;
+
+        document.getElementById("kpiDuplicates").textContent = duplicateCount;
+      }
+
+      function renderBranchChart(filteredInvoices) {
+        const branches = ["BK", "CLIA", "MATRIZ", "IPA"];
+
+        const values = branches.map((branch) => ({
+          branch,
+          count: filteredInvoices.filter(
+            (invoice) =>
+              invoice.branch === branch && invoice.status !== "Duplicada",
+          ).length,
+        }));
+
+        const maximum = Math.max(...values.map((item) => item.count), 1);
+
+        elements.branchChart.innerHTML = values
+          .map((item) => {
+            const height = Math.max((item.count / maximum) * 150, 8);
+
+            return `
+              <div class="bar-column">
+                <span class="bar-value">${item.count}</span>
+                <div class="bar" style="height: ${height}px"></div>
+                <span class="bar-label">${item.branch}</span>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderStatusList(filteredInvoices) {
+        const statusConfig = [
+          {
+            label: "Processadas",
+            status: "Processada",
+            color: "var(--green)",
+          },
+          {
+            label: "Vencendo",
+            status: "Vencendo",
+            color: "var(--yellow)",
+          },
+          {
+            label: "Atrasadas",
+            status: "Atrasada",
+            color: "var(--red)",
+          },
+          {
+            label: "Duplicadas",
+            status: "Duplicada",
+            color: "var(--purple)",
+          },
+        ];
+
+        const total = Math.max(filteredInvoices.length, 1);
+
+        elements.statusList.innerHTML = statusConfig
+          .map((item) => {
+            const count = filteredInvoices.filter(
+              (invoice) => invoice.status === item.status,
+            ).length;
+
+            const percentage = Math.round((count / total) * 100);
+
+            return `
+              <div class="status-item">
+                <span
+                  class="status-dot"
+                  style="background: ${item.color}"
+                ></span>
+
+                <div class="status-content">
+                  <strong>${item.label}</strong>
+                  <span>${percentage}% dos documentos</span>
+
+                  <div class="progress">
+                    <div
+                      class="progress-value"
+                      style="
+                        width: ${percentage}%;
+                        background: ${item.color};
+                      "
+                    ></div>
+                  </div>
+                </div>
+
+                <span class="status-number">${count}</span>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function getSupplierSummary(filteredInvoices) {
+        const summary = {};
+
+        filteredInvoices.forEach((invoice) => {
+          if (!summary[invoice.supplier]) {
+            summary[invoice.supplier] = {
+              name: invoice.supplier,
+              cnpj: invoice.cnpjSupplier,
+              total: 0,
+              count: 0,
+              branches: new Set(),
+            };
+          }
+
+          if (invoice.status !== "Duplicada") {
+            summary[invoice.supplier].total += invoice.value;
+          }
+
+          summary[invoice.supplier].count += 1;
+          summary[invoice.supplier].branches.add(invoice.branch);
+        });
+
+        return Object.values(summary)
+          .map((supplier) => ({
+            ...supplier,
+            branches: Array.from(supplier.branches),
+          }))
+          .sort((a, b) => b.total - a.total);
+      }
+
+      function renderSupplierRanking(filteredInvoices) {
+        const suppliers = getSupplierSummary(filteredInvoices).slice(0, 5);
+
+        if (!suppliers.length) {
+          elements.supplierRanking.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="building-2"></i>
+              <strong>Nenhum fornecedor encontrado</strong>
+              <span>Altere os filtros para visualizar os resultados.</span>
+            </div>
+          `;
+
+          lucide.createIcons();
+          return;
+        }
+
+        elements.supplierRanking.innerHTML = suppliers
+          .map(
+            (supplier, index) => `
+              <div class="supplier-item">
+                <div class="supplier-position">${index + 1}</div>
+
+                <div class="supplier-name">
+                  <strong>${supplier.name}</strong>
+                  <span>${supplier.count} documento(s)</span>
+                </div>
+
+                <span class="supplier-value">
+                  ${formatCurrency(supplier.total)}
+                </span>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      function renderSuppliersPage(filteredInvoices) {
+        const suppliers = getSupplierSummary(filteredInvoices);
+
+        if (!suppliers.length) {
+          elements.suppliersGrid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1">
+              <i data-lucide="search-x"></i>
+              <strong>Nenhum fornecedor encontrado</strong>
+              <span>Não há fornecedores correspondentes aos filtros.</span>
+            </div>
+          `;
+
+          lucide.createIcons();
+          return;
+        }
+
+        elements.suppliersGrid.innerHTML = suppliers
+          .map((supplier) => {
+            const initials = supplier.name
+              .split(" ")
+              .slice(0, 2)
+              .map((word) => word[0])
+              .join("");
+
+            return `
+              <article class="supplier-card">
+                <div class="supplier-card-top">
+                  <div class="supplier-logo">${initials}</div>
+
+                  <div>
+                    <strong>${supplier.name}</strong>
+                    <span>${supplier.cnpj}</span>
+                  </div>
+                </div>
+
+                <div class="supplier-stats">
+                  <div class="supplier-stat">
+                    <span>Documentos</span>
+                    <strong>${supplier.count}</strong>
+                  </div>
+
+                  <div class="supplier-stat">
+                    <span>Valor total</span>
+                    <strong>${formatCurrency(supplier.total)}</strong>
+                  </div>
+
+                  <div class="supplier-stat">
+                    <span>Filiais</span>
+                    <strong>${supplier.branches.join(", ")}</strong>
+                  </div>
+
+                  <div class="supplier-stat">
+                    <span>Média por NF</span>
+                    <strong>
+                      ${formatCurrency(supplier.total / supplier.count)}
+                    </strong>
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      function createInvoiceRow(invoice, includeId = false) {
+        return `
+          <tr>
+            ${
+              includeId
+                ? `<td style="color: var(--blue-light); font-weight: 700">
+                    ${invoice.id}
+                   </td>`
+                : ""
+            }
+
+            <td>
+              <div class="supplier-cell">
+                <strong>${invoice.supplier}</strong>
+                <span>${invoice.type}</span>
+              </div>
+            </td>
+
+            <td>${invoice.invoice}</td>
+            <td>${invoice.branch}</td>
+
+            ${
+              includeId
+                ? `<td>${formatDate(invoice.issueDate)}</td>`
+                : ""
+            }
+
+            <td>${formatDate(invoice.dueDate)}</td>
+            <td>${formatCurrency(invoice.value)}</td>
+
+            <td>
+              <span class="badge ${getStatusClass(invoice.status)}">
+                ${invoice.status}
+              </span>
+            </td>
+
+            <td>
+              <button
+                class="action-button"
+                aria-label="Ver detalhes"
+                data-invoice-id="${invoice.id}"
+              >
+                <i data-lucide="eye"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }
+
+      function renderTables(filteredInvoices) {
+        const recentInvoices = filteredInvoices.slice(0, 6);
+
+        if (!recentInvoices.length) {
+          elements.recentTable.innerHTML = `
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <strong>Nenhuma nota encontrada</strong>
+                  <span>Altere os filtros para visualizar documentos.</span>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          elements.recentTable.innerHTML = recentInvoices
+            .map((invoice) => createInvoiceRow(invoice, false))
+            .join("");
+        }
+
+        if (!filteredInvoices.length) {
+          elements.invoicesTable.innerHTML = `
+            <tr>
+              <td colspan="9">
+                <div class="empty-state">
+                  <i data-lucide="search-x"></i>
+                  <strong>Nenhuma nota fiscal encontrada</strong>
+                  <span>Não há documentos correspondentes aos filtros.</span>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          elements.invoicesTable.innerHTML = filteredInvoices
+            .map((invoice) => createInvoiceRow(invoice, true))
+            .join("");
+        }
+
+        elements.tableCounter.textContent =
+          `${filteredInvoices.length} documento(s)`;
+
+        document.querySelectorAll("[data-invoice-id]").forEach((button) => {
+          button.addEventListener("click", () => {
+            openInvoiceModal(button.dataset.invoiceId);
+          });
+        });
+
+        lucide.createIcons();
+      }
+
+      function openInvoiceModal(invoiceId) {
+        const invoice = invoices.find((item) => item.id === invoiceId);
+
+        if (!invoice) {
+          return;
+        }
+
+        elements.modalContent.innerHTML = `
+          <div class="detail-item">
+            <span>ID</span>
+            <strong>${invoice.id}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Status</span>
+            <strong>${invoice.status}</strong>
+          </div>
+
+          <div class="detail-item full">
+            <span>Fornecedor</span>
+            <strong>${invoice.supplier}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>CNPJ fornecedor</span>
+            <strong>${invoice.cnpjSupplier}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Número da NF</span>
+            <strong>${invoice.invoice}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Filial</span>
+            <strong>${invoice.branch}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>CNPJ filial</span>
+            <strong>${invoice.branchCnpj}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Emissão</span>
+            <strong>${formatDate(invoice.issueDate)}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Vencimento</span>
+            <strong>${formatDate(invoice.dueDate)}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Valor</span>
+            <strong>${formatCurrency(invoice.value)}</strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Tipo</span>
+            <strong>${invoice.type}</strong>
+          </div>
+
+          <div class="detail-item full">
+            <span>Chave de acesso</span>
+            <strong>${invoice.accessKey}</strong>
+          </div>
+
+          <div class="detail-item full">
+            <span>Assunto do e-mail</span>
+            <strong>${invoice.subject}</strong>
+          </div>
+        `;
+
+        elements.modalBackdrop.classList.add("active");
+      }
+
+      function closeModal() {
+        elements.modalBackdrop.classList.remove("active");
+      }
+
+      function changePage(page, title) {
+        state.page = page;
+
+        document.querySelectorAll(".page-section").forEach((section) => {
+          section.classList.toggle("active", section.id === page);
+        });
+
+        document.querySelectorAll(".menu-item[data-page]").forEach((button) => {
+          button.classList.toggle("active", button.dataset.page === page);
+        });
+
+        elements.pageTitle.textContent = title;
+
+        elements.sidebar.classList.remove("open");
+      }
+
+      function render() {
+        const filteredInvoices = getFilteredInvoices();
+
+        renderKPIs(filteredInvoices);
+        renderBranchChart(filteredInvoices);
+        renderStatusList(filteredInvoices);
+        renderSupplierRanking(filteredInvoices);
+        renderSuppliersPage(filteredInvoices);
+        renderTables(filteredInvoices);
+
+        lucide.createIcons();
+      }
+
+      function showToast(message) {
+        elements.toastMessage.textContent = message;
+        elements.toast.classList.add("active");
+
+        window.clearTimeout(showToast.timeout);
+
+        showToast.timeout = window.setTimeout(() => {
+          elements.toast.classList.remove("active");
+        }, 3200);
+      }
+
+      document.querySelectorAll(".menu-item[data-page]").forEach((button) => {
+        button.addEventListener("click", () => {
+          changePage(button.dataset.page, button.dataset.title);
+        });
+      });
+
+      document.querySelectorAll("[data-go-page]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const targetPage = button.dataset.goPage;
+
+          const menuButton = document.querySelector(
+            `.menu-item[data-page="${targetPage}"]`,
+          );
+
+          changePage(
+            targetPage,
+            menuButton?.dataset.title || "FiscalFlow",
+          );
+        });
+      });
+
+      elements.searchInput.addEventListener("input", (event) => {
+        state.search = event.target.value;
+        render();
+      });
+
+      elements.branchFilter.addEventListener("change", (event) => {
+        state.branch = event.target.value;
+        render();
+      });
+
+      elements.statusFilter.addEventListener("change", (event) => {
+        state.status = event.target.value;
+        render();
+      });
+
+      elements.periodFilter.addEventListener("change", (event) => {
+        state.period = event.target.value;
+        render();
+      });
+
+      document
+        .getElementById("processButton")
+        .addEventListener("click", (event) => {
+          const button = event.currentTarget;
+          const icon = button.querySelector("svg");
+
+          button.disabled = true;
+
+          if (icon) {
+            icon.style.animation = "spin 0.8s linear infinite";
+          }
+
+          window.setTimeout(() => {
+            button.disabled = false;
+
+            if (icon) {
+              icon.style.animation = "";
+            }
+
+            showToast(
+              "Processamento concluído: 8 e-mails verificados e 2 XMLs importados.",
+            );
+          }, 1100);
+        });
+
+      document
+        .getElementById("logsButton")
+        .addEventListener("click", () => {
+          showToast(
+            "Última execução: 8 mensagens verificadas, 2 notas incluídas e 1 duplicidade bloqueada.",
+          );
+        });
+
+      document
+        .getElementById("settingsButton")
+        .addEventListener("click", () => {
+          showToast(
+            "Demonstração: as configurações estão disponíveis somente no projeto completo.",
+          );
+        });
+
+      document
+        .getElementById("mobileMenu")
+        .addEventListener("click", () => {
+          elements.sidebar.classList.toggle("open");
+        });
+
+      document
+        .getElementById("closeModal")
+        .addEventListener("click", closeModal);
+
+      elements.modalBackdrop.addEventListener("click", (event) => {
+        if (event.target === elements.modalBackdrop) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          closeModal();
+        }
+      });
+
+      document.getElementById("currentDate").textContent =
+        new Intl.DateTimeFormat("pt-BR", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        }).format(new Date("2026-07-17T12:00:00"));
+
+      const animationStyle = document.createElement("style");
+
+      animationStyle.textContent = `
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `;
+
+      document.head.appendChild(animationStyle);
+
+      render();
+      lucide.createIcons();
+    </script>
+  </body>
+</html>

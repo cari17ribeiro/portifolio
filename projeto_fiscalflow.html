@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+      name="description"
+      content="FiscalFlow: automação de processamento de notas fiscais com Google Apps Script, Gmail, Google Sheets, XML e dashboard interativo."
+    />
+
+    <title>Projeto: FiscalFlow | Carina da Silva Ribeiro</title>
+
+    <link rel="stylesheet" href="./src/style.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      .project-actions {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 24px;
+      }
+
+      .project-actions .btn-contact {
+        min-width: 190px;
+        justify-content: center;
+      }
+
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-width: 190px;
+        padding: 12px 20px;
+        border-radius: 12px;
+        color: #ffffff;
+        text-decoration: none;
+        font-weight: 600;
+        border: 1px solid rgba(96, 165, 250, 0.25);
+        background: rgba(96, 165, 250, 0.08);
+        transition:
+          transform 0.25s ease,
+          border-color 0.25s ease,
+          background 0.25s ease;
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-2px);
+        border-color: rgba(96, 165, 250, 0.55);
+        background: rgba(96, 165, 250, 0.15);
+      }
+
+      .btn-secondary svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(150px, 1fr));
+        gap: 16px;
+        margin-top: 34px;
+      }
+
+      .metric-card {
+        padding: 22px 18px;
+        border-radius: 18px;
+        text-align: center;
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(96, 165, 250, 0.15);
+        transition:
+          transform 0.25s ease,
+          border-color 0.25s ease;
+      }
+
+      .metric-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(96, 165, 250, 0.45);
+      }
+
+      .metric-value {
+        display: block;
+        margin-bottom: 7px;
+        color: #ffffff;
+        font-size: 1.65rem;
+        font-weight: 800;
+      }
+
+      .metric-label {
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        line-height: 1.4;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        margin-top: 22px;
+      }
+
+      .info-card {
+        padding: 22px;
+        border-radius: 18px;
+        background: rgba(15, 23, 42, 0.38);
+        border: 1px solid rgba(96, 165, 250, 0.13);
+      }
+
+      .info-card h3 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        color: #ffffff;
+        font-size: 1rem;
+      }
+
+      .info-card h3 svg {
+        width: 18px;
+        color: var(--blue-light);
+      }
+
+      .info-card p {
+        color: var(--text-muted);
+        font-size: 0.94rem;
+        line-height: 1.6;
+      }
+
+      .feature-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 14px;
+        margin-top: 20px;
+      }
+
+      .feature-item {
+        display: flex;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid rgba(96, 165, 250, 0.14);
+        border-radius: 16px;
+        color: var(--text-muted);
+        background: rgba(96, 165, 250, 0.06);
+        line-height: 1.55;
+      }
+
+      .feature-item svg {
+        width: 19px;
+        height: 19px;
+        flex: 0 0 auto;
+        margin-top: 2px;
+        color: var(--blue-light);
+      }
+
+      .process-flow {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(120px, 1fr));
+        gap: 12px;
+        align-items: stretch;
+        margin-top: 28px;
+      }
+
+      .process-step {
+        position: relative;
+        display: flex;
+        min-height: 145px;
+        padding: 20px 14px;
+        border: 1px solid rgba(96, 165, 250, 0.15);
+        border-radius: 18px;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: rgba(15, 23, 42, 0.42);
+      }
+
+      .process-step:not(:last-child)::after {
+        position: absolute;
+        z-index: 2;
+        top: 50%;
+        right: -18px;
+        width: 23px;
+        color: var(--blue-light);
+        content: "→";
+        font-size: 1.5rem;
+        font-weight: 700;
+        transform: translateY(-50%);
+      }
+
+      .process-icon {
+        display: grid;
+        width: 45px;
+        height: 45px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(96, 165, 250, 0.2);
+        border-radius: 13px;
+        place-items: center;
+        background: rgba(96, 165, 250, 0.1);
+      }
+
+      .process-icon svg {
+        width: 22px;
+        height: 22px;
+        color: var(--blue-light);
+      }
+
+      .process-step strong {
+        margin-bottom: 7px;
+        color: #ffffff;
+        font-size: 0.94rem;
+      }
+
+      .process-step span {
+        color: var(--text-muted);
+        font-size: 0.78rem;
+        line-height: 1.4;
+      }
+
+      .architecture-box {
+        display: grid;
+        grid-template-columns: 1fr 70px 1fr 70px 1fr;
+        gap: 14px;
+        align-items: center;
+        margin-top: 24px;
+        padding: 28px;
+        border: 1px solid rgba(96, 165, 250, 0.15);
+        border-radius: 22px;
+        background: rgba(15, 23, 42, 0.38);
+      }
+
+      .architecture-layer {
+        padding: 22px;
+        border: 1px solid rgba(96, 165, 250, 0.18);
+        border-radius: 18px;
+        text-align: center;
+        background: rgba(96, 165, 250, 0.06);
+      }
+
+      .architecture-layer svg {
+        width: 28px;
+        height: 28px;
+        margin-bottom: 10px;
+        color: var(--blue-light);
+      }
+
+      .architecture-layer h3 {
+        margin-bottom: 7px;
+        color: #ffffff;
+        font-size: 1rem;
+      }
+
+      .architecture-layer p {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        line-height: 1.5;
+      }
+
+      .architecture-arrow {
+        color: var(--blue-light);
+        text-align: center;
+        font-size: 1.8rem;
+      }
+
+      .learning-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 14px;
+        margin-top: 20px;
+      }
+
+      .learning-item {
+        display: flex;
+        gap: 11px;
+        align-items: flex-start;
+        padding: 16px;
+        border: 1px solid rgba(96, 165, 250, 0.13);
+        border-radius: 15px;
+        color: var(--text-muted);
+        background: rgba(15, 23, 42, 0.35);
+        line-height: 1.5;
+      }
+
+      .learning-item svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
+        margin-top: 2px;
+        color: var(--blue-light);
+      }
+
+      .github-callout {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 30px;
+        border: 1px solid rgba(96, 165, 250, 0.2);
+        border-radius: 22px;
+        background:
+          linear-gradient(
+            135deg,
+            rgba(37, 99, 235, 0.14),
+            rgba(15, 23, 42, 0.45)
+          );
+      }
+
+      .github-callout-text h3 {
+        display: flex;
+        gap: 9px;
+        align-items: center;
+        margin-bottom: 9px;
+        color: #ffffff;
+        font-size: 1.25rem;
+      }
+
+      .github-callout-text h3 svg {
+        color: var(--blue-light);
+      }
+
+      .github-callout-text p {
+        max-width: 680px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      @media (max-width: 1000px) {
+        .metrics-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .process-flow {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .process-step:not(:last-child)::after {
+          display: none;
+        }
+
+        .architecture-box {
+          grid-template-columns: 1fr;
+        }
+
+        .architecture-arrow {
+          transform: rotate(90deg);
+        }
+      }
+
+      @media (max-width: 700px) {
+        .demo-container {
+          height: 760px !important;
+          min-height: 760px !important;
+        }
+
+        .project-actions .btn-contact,
+        .project-actions .btn-secondary {
+          width: 100%;
+        }
+
+        .metrics-grid,
+        .process-flow {
+          grid-template-columns: 1fr;
+        }
+
+        .github-callout {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .github-callout .btn-contact {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="bg-grid-overlay"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <nav class="navbar glass-panel" style="position: absolute">
+      <div class="nav-content">
+        <span class="logo">CR</span>
+
+        <ul class="nav-links">
+          <li>
+            <a
+              href="index.html#automations"
+              style="display: flex; align-items: center; gap: 6px"
+            >
+              <i
+                data-lucide="arrow-left"
+                style="width: 16px; height: 16px"
+              ></i>
+              Voltar ao Portfólio
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="container" style="padding-top: 140px">
+      <!-- Cabeçalho -->
+      <section class="project-header reveal">
+        <h1>FiscalFlow</h1>
+
+        <p>
+          Plataforma de automação para processamento de notas fiscais recebidas
+          por e-mail. O sistema localiza anexos XML, extrai dados fiscais,
+          identifica a filial destinatária, controla duplicidades e apresenta
+          os resultados em um dashboard interativo.
+        </p>
+
+        <div class="badges">
+          <span>Google Apps Script</span>
+          <span>JavaScript</span>
+          <span>Gmail</span>
+          <span>Google Sheets</span>
+          <span>XML</span>
+          <span>Google Charts</span>
+        </div>
+
+        <div class="project-actions">
+          <a href="#demonstracao" class="btn-secondary">
+            <i data-lucide="monitor-play"></i>
+            Testar demonstração
+          </a>
+
+          <!-- Troque o endereço abaixo quando criar o repositório -->
+          <a
+            href="https://github.com/cari17ribeiro/fiscalflow"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-contact"
+          >
+            <i data-lucide="github"></i>
+            Ver repositório
+          </a>
+        </div>
+
+        <div class="metrics-grid">
+          <article class="metric-card glass-panel">
+            <strong class="metric-value">4</strong>
+            <span class="metric-label">Filiais identificadas automaticamente</span>
+          </article>
+
+          <article class="metric-card glass-panel">
+            <strong class="metric-value">XML</strong>
+            <span class="metric-label">Extração estruturada de dados fiscais</span>
+          </article>
+
+          <article class="metric-card glass-panel">
+            <strong class="metric-value">100%</strong>
+            <span class="metric-label">Controle por chave de acesso</span>
+          </article>
+
+          <article class="metric-card glass-panel">
+            <strong class="metric-value">Tempo real</strong>
+            <span class="metric-label">Indicadores e dashboard gerencial</span>
+          </article>
+        </div>
+      </section>
+
+      <!-- Clone -->
+      <section
+        id="demonstracao"
+        class="content-section reveal"
+        style="margin-top: 60px"
+      >
+        <h2>
+          <i data-lucide="monitor-play"></i>
+          Clone interativo
+        </h2>
+
+        <p style="color: var(--text-muted); margin-bottom: 20px">
+          Explore uma simulação do FiscalFlow com dados fictícios. Navegue pelo
+          dashboard, filtre notas por filial e status, pesquise fornecedores e
+          acompanhe os principais indicadores.
+        </p>
+
+        <div
+          class="demo-container glass-panel"
+          style="
+            height: 84vh;
+            min-height: 680px;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 16px;
+            background-color: #070b14;
+          "
+        >
+          <iframe
+            src="demo-fiscalflow.html"
+            title="Clone interativo FiscalFlow"
+            loading="lazy"
+            style="width: 100%; height: 100%; border: none"
+          ></iframe>
+        </div>
+      </section>
+
+      <!-- Apresentação -->
+      <section class="content-section reveal" style="margin-top: 80px">
+        <h2>
+          <i data-lucide="sparkles"></i>
+          Apresentação do projeto
+        </h2>
+
+        <div class="info-grid">
+          <article class="info-card glass-panel">
+            <h3>
+              <i data-lucide="target"></i>
+              Objetivo
+            </h3>
+
+            <p>
+              Reduzir o trabalho manual necessário para localizar e registrar
+              notas fiscais recebidas por e-mail, centralizando as informações
+              em uma base estruturada.
+            </p>
+          </article>
+
+          <article class="info-card glass-panel">
+            <h3>
+              <i data-lucide="zap"></i>
+              Automação
+            </h3>
+
+            <p>
+              O Google Apps Script consulta o Gmail, identifica anexos XML,
+              processa os documentos e grava automaticamente os dados na
+              planilha.
+            </p>
+          </article>
+
+          <article class="info-card glass-panel">
+            <h3>
+              <i data-lucide="shield-check"></i>
+              Confiabilidade
+            </h3>
+
+            <p>
+              Cada nota é validada pela chave de acesso, reduzindo registros
+              duplicados e garantindo rastreabilidade durante o processamento.
+            </p>
+          </article>
+
+          <article class="info-card glass-panel">
+            <h3>
+              <i data-lucide="bar-chart-3"></i>
+              Visão gerencial
+            </h3>
+
+            <p>
+              Os registros alimentam um dashboard com KPIs, gráficos, ranking
+              de fornecedores, filtros e acompanhamento dos vencimentos.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Como funciona -->
+      <section class="content-section reveal">
+        <h2>
+          <i data-lucide="workflow"></i>
+          Como funciona
+        </h2>
+
+        <div class="process-flow">
+          <article class="process-step">
+            <div class="process-icon">
+              <i data-lucide="mail"></i>
+            </div>
+
+            <strong>Gmail</strong>
+            <span>Localiza mensagens com anexos XML.</span>
+          </article>
+
+          <article class="process-step">
+            <div class="process-icon">
+              <i data-lucide="file-code-2"></i>
+            </div>
+
+            <strong>Leitura do XML</strong>
+            <span>Abre e interpreta o documento fiscal.</span>
+          </article>
+
+          <article class="process-step">
+            <div class="process-icon">
+              <i data-lucide="braces"></i>
+            </div>
+
+            <strong>Parser</strong>
+            <span>Extrai fornecedor, NF, datas e valor.</span>
+          </article>
+
+          <article class="process-step">
+            <div class="process-icon">
+              <i data-lucide="building-2"></i>
+            </div>
+
+            <strong>Filial</strong>
+            <span>Identifica o destino pelo CNPJ.</span>
+          </article>
+
+          <article class="process-step">
+            <div class="process-icon">
+              <i data-lucide="sheet"></i>
+            </div>
+
+            <strong>Google Sheets</strong>
+            <span>Registra e organiza os dados extraídos.</span>
+          </article>
+
+          <article class="process-step">
+            <div class="process-icon">
+              <i data-lucide="layout-dashboard"></i>
+            </div>
+
+            <strong>Dashboard</strong>
+            <span>Atualiza indicadores e análises.</span>
+          </article>
+        </div>
+      </section>
+
+      <!-- Arquitetura -->
+      <section class="content-section reveal">
+        <h2>
+          <i data-lucide="boxes"></i>
+          Arquitetura da solução
+        </h2>
+
+        <div class="architecture-box glass-panel">
+          <article class="architecture-layer">
+            <i data-lucide="inbox"></i>
+            <h3>Entrada</h3>
+            <p>Gmail, assunto da mensagem e anexos XML de notas fiscais.</p>
+          </article>
+
+          <div class="architecture-arrow">→</div>
+
+          <article class="architecture-layer">
+            <i data-lucide="cpu"></i>
+            <h3>Processamento</h3>
+            <p>
+              Apps Script, parser XML, validação da chave e identificação da
+              filial.
+            </p>
+          </article>
+
+          <div class="architecture-arrow">→</div>
+
+          <article class="architecture-layer">
+            <i data-lucide="database"></i>
+            <h3>Saída</h3>
+            <p>Google Sheets, histórico de controle, logs e dashboard.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- Tecnologias -->
+      <section class="content-section reveal">
+        <h2>
+          <i data-lucide="wrench"></i>
+          Tecnologias
+        </h2>
+
+        <div
+          class="badges"
+          style="justify-content: flex-start; margin-top: 18px"
+        >
+          <span>Google Apps Script</span>
+          <span>JavaScript</span>
+          <span>HTML5</span>
+          <span>CSS3</span>
+          <span>Gmail Service</span>
+          <span>Google Sheets</span>
+          <span>Google Charts</span>
+          <span>XML Parser</span>
+          <span>HTMLService</span>
+        </div>
+      </section>
+
+      <!-- Funcionalidades -->
+      <section class="content-section reveal">
+        <h2>
+          <i data-lucide="list-checks"></i>
+          Funcionalidades
+        </h2>
+
+        <div class="feature-list">
+          <article class="feature-item">
+            <i data-lucide="mail-search"></i>
+            <span>
+              Busca automática de e-mails com anexos XML no Gmail.
+            </span>
+          </article>
+
+          <article class="feature-item">
+            <i data-lucide="file-code-2"></i>
+            <span>
+              Leitura estruturada de documentos fiscais eletrônicos.
+            </span>
+          </article>
+
+          <article class="feature-item">
+            <i data-lucide="database-zap"></i>
+            <span>
+              Cadastro automático das informações no Google Sheets.
+            </span>
+          </article>
+
+          <article class="feature-item">
+            <i data-lucide="building-2"></i>
+            <span>
+              Identificação automática da filial destinatária pelo CNPJ.
+            </span>
+          </article>
+
+          <article class="feature-item">
+            <i data-lucide="copy-check"></i>
+            <span>
+              Prevenção de duplicidades utilizando a chave de acesso da NF-e.
+            </span>
+          </article>
+
+          <article class="feature-item">
+            <i data-lucide="calendar-clock"></i>
+            <span>
+              Controle de emissão, vencimento e prazo de pagamento.
+            </span>
+          </article>
+
+          <article class="feature-item">
+            <i data-lucide="bar-chart-3"></i>
+            <span>
+              KPIs, gráficos e ranking dos principais fornecedores.
+            </span>
+          </article>
+
+          <article class="feature-item">
+            <i data-lucide="search"></i>
+            <span>
+              Pesquisa e filtros por filial, fornecedor, status e período.
+            </span>
+          </article>
+
+          <article class="feature-item">
+            <i data-lucide="scroll-text"></i>
+            <span>
+              Registro de logs e acompanhamento das mensagens processadas.
+            </span>
+          </article>
+        </div>
+      </section>
+
+      <!-- Aprendizados -->
+      <section class="content-section reveal">
+        <h2>
+          <i data-lucide="graduation-cap"></i>
+          Aprendizados
+        </h2>
+
+        <p style="color: var(--text-muted); line-height: 1.7">
+          Durante o desenvolvimento do FiscalFlow foram aplicados conceitos de
+          automação de processos, integração entre serviços Google, tratamento
+          de dados estruturados, arquitetura modular e desenvolvimento de
+          interfaces para sistemas internos.
+        </p>
+
+        <div class="learning-list">
+          <article class="learning-item">
+            <i data-lucide="check-circle-2"></i>
+            <span>Automação de rotinas operacionais com Apps Script.</span>
+          </article>
+
+          <article class="learning-item">
+            <i data-lucide="check-circle-2"></i>
+            <span>Integração entre Gmail, Google Sheets e HTMLService.</span>
+          </article>
+
+          <article class="learning-item">
+            <i data-lucide="check-circle-2"></i>
+            <span>Leitura e manipulação de documentos XML.</span>
+          </article>
+
+          <article class="learning-item">
+            <i data-lucide="check-circle-2"></i>
+            <span>Validação, deduplicação e rastreabilidade de registros.</span>
+          </article>
+
+          <article class="learning-item">
+            <i data-lucide="check-circle-2"></i>
+            <span>Construção de dashboards responsivos e interativos.</span>
+          </article>
+
+          <article class="learning-item">
+            <i data-lucide="check-circle-2"></i>
+            <span>Organização do código em serviços e responsabilidades.</span>
+          </article>
+        </div>
+      </section>
+
+      <!-- GitHub -->
+      <section class="content-section reveal" style="margin-bottom: 80px">
+        <div class="github-callout glass-panel">
+          <div class="github-callout-text">
+            <h3>
+              <i data-lucide="github"></i>
+              Código e documentação
+            </h3>
+
+            <p>
+              O repositório apresenta a estrutura do projeto, os serviços do
+              Google Apps Script, o dashboard, a documentação da arquitetura e
+              instruções para configuração com dados fictícios.
+            </p>
+          </div>
+
+          <!-- Troque o endereço quando o repositório estiver disponível -->
+          <a
+            href="https://github.com/cari17ribeiro/fiscalflow"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-contact"
+          >
+            <i data-lucide="external-link"></i>
+            Abrir GitHub
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        lucide.createIcons();
+
+        const reveals = document.querySelectorAll(".reveal");
+
+        const revealObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("active");
+              } else if (entry.boundingClientRect.top > 0) {
+                entry.target.classList.remove("active");
+              }
+            });
+          },
+          {
+            threshold: 0.12,
+          },
+        );
+
+        reveals.forEach((element) => {
+          revealObserver.observe(element);
+        });
+      });
+    </script>
+  </body>
+</html>

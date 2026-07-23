@@ -1,116 +1,174 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Case do Dashboard Preventivas em Power BI: controle operacional de manutenção por equipamento, horímetro e prioridade." />
-    <title>Dashboard Preventivas | Carina Ribeiro</title>
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content="Dashboard Preventivas | Power BI" />
-    <meta property="og:description" content="Controle operacional de manutenção por equipamento, horímetro e prioridade." />
+    <meta
+      name="description"
+      content="Documentação do Dashboard Preventivas em Power BI para controle operacional de manutenção por equipamento."
+    />
+    <title>Projeto: Dashboard Preventivas | Carina da Silva Ribeiro</title>
     <link rel="stylesheet" href="./src/style.css" />
     <script src="https://unpkg.com/lucide@latest"></script>
   </head>
-  <body class="case-page">
+  <body>
     <div class="bg-grid-overlay"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
 
-    <main class="case-shell">
-      <nav class="case-nav" aria-label="Navegação do projeto">
-        <a class="case-brand" href="index.html">CR<span>.</span></a>
-        <a class="case-back" href="index.html#dashboards"><i data-lucide="arrow-left"></i> Voltar para dashboards</a>
-      </nav>
+    <nav class="navbar glass-panel" style="position: absolute;">
+      <div class="nav-content">
+        <span class="logo">CR</span>
+        <ul class="nav-links">
+          <li>
+            <a href="index.html#dashboards" style="display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+              Voltar ao Portfólio
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-      <header class="case-hero">
-        <div>
-          <p class="case-eyebrow">Case de Business Intelligence</p>
-          <h1>Dashboard <span>Preventivas</span></h1>
-          <p class="case-lede">Uma visão operacional em Power BI para transformar leituras de horímetro, histórico de revisões e planos de manutenção em uma fila clara de prioridades.</p>
-        </div>
-        <div class="case-meta" aria-label="Ficha do projeto">
-          <div><small>Ferramenta</small><strong>Power BI</strong></div>
-          <div><small>Área</small><strong>Manutenção</strong></div>
-          <div><small>Foco</small><strong>Controle preventivo</strong></div>
-          <div><small>Entidade</small><strong>Equipamentos</strong></div>
+    <div class="container project-documentation" style="padding-top: 140px;">
+      <header class="project-header reveal">
+        <h1>Dashboard Preventivas</h1>
+        <p>
+          Solução em Power BI para acompanhar o ciclo de manutenção preventiva,
+          conectar histórico, horímetro atual e próxima revisão e orientar a
+          priorização operacional dos equipamentos.
+        </p>
+        <div class="badges">
+          <span>Power BI</span>
+          <span>Manutenção Preventiva</span>
+          <span>Indicadores DAX</span>
+          <span>Gestão Operacional</span>
         </div>
       </header>
 
-      <figure class="dashboard-shot">
-        <div class="shot-frame">
-          <div class="shot-placeholder">
-            <div class="camera-box"><i data-lucide="image-plus"></i></div>
-            <h2>Espaço para a imagem do dashboard</h2>
-            <p>Área preparada em proporção 16:9 para receber a captura oficial da página “Preventivas” no Power BI.</p>
-          </div>
-        </div>
-        <figcaption class="shot-caption">
-          <span>Imagem recomendada: 1600 × 900 px ou superior</span>
-          <span>Página principal · Programação e Controle de Preventivas</span>
-        </figcaption>
-      </figure>
+      <section class="content-section reveal">
+        <h2><i data-lucide="images"></i> Imagens do dashboard</h2>
+        <p class="section-description">
+          Mosaico preparado para receber as capturas das páginas, filtros,
+          indicadores e detalhes do relatório.
+        </p>
 
-      <section class="case-section">
-        <div class="section-intro"><p class="section-index">01 · VISÃO GERAL</p><h2>Decisão antes da parada.</h2></div>
-        <div class="section-body">
-          <p>O Dashboard Preventivas foi estruturado para apoiar o acompanhamento de manutenções por máquina. A solução reúne localização, identificação do equipamento, última revisão, leitura atual e próxima intervenção em um único fluxo visual.</p>
-          <p>O principal indicador é <strong>Horas_Faltam_Proxima</strong>: a diferença entre o horímetro previsto e o atual. Ele sinaliza o que está no prazo, próximo do marco ou já vencido, ajudando a equipe a direcionar sua atenção.</p>
-          <div class="metric-grid">
-            <div class="metric"><strong>02</strong><span>páginas de análise</span></div>
-            <div class="metric"><strong>20</strong><span>visuais mapeados</span></div>
-            <div class="metric"><strong>10</strong><span>medidas DAX identificadas</span></div>
-            <div class="metric"><strong>16:9</strong><span>layout de 1280 × 720 px</span></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="case-section">
-        <div class="section-intro"><p class="section-index">02 · DESAFIO</p><h2>Conectar histórico, presente e previsão.</h2></div>
-        <div class="section-body">
-          <p>A programação preventiva depende de informações que normalmente estão distribuídas entre cadastros, leituras e ordens de serviço. O desafio foi organizar esses sinais em uma leitura operacional simples.</p>
-          <ul class="challenge-list">
-            <li><b>01</b><span>Localizar rapidamente cada máquina e seus dados cadastrais.</span></li>
-            <li><b>02</b><span>Rastrear a última preventiva, incluindo data, horímetro e ordem de serviço.</span></li>
-            <li><b>03</b><span>Comparar a leitura atual com o próximo marco do plano de manutenção.</span></li>
-            <li><b>04</b><span>Transformar a diferença de horímetro em prioridade operacional.</span></li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="case-section">
-        <div class="section-intro"><p class="section-index">03 · EXPERIÊNCIA</p><h2>Um fluxo que acompanha o ciclo da máquina.</h2></div>
-        <div class="section-body">
-          <div class="flow-track">
-            <article class="flow-card"><small>PASSADO</small><h3>Última revisão</h3><p>Tipo da preventiva, data, OS e horímetro registrado no último atendimento.</p></article>
-            <article class="flow-card"><small>PRESENTE</small><h3>Situação atual</h3><p>Leitura mais recente do horímetro com sua data de atualização.</p></article>
-            <article class="flow-card is-priority"><small>PRÓXIMO PASSO</small><h3>Próxima preventiva</h3><p>Marco planejado, tipo de revisão e horas restantes para priorização.</p></article>
-          </div>
+        <div class="dashboard-mosaic" aria-label="Espaços reservados para imagens do Dashboard Preventivas">
+          <figure class="dashboard-mosaic-item dashboard-mosaic-item--featured glass-panel">
+            <div class="dashboard-photo-placeholder">
+              <i data-lucide="image-plus"></i>
+              <strong>Visão principal</strong>
+              <span>Programação e Controle de Preventivas</span>
+            </div>
+          </figure>
+          <figure class="dashboard-mosaic-item glass-panel">
+            <div class="dashboard-photo-placeholder">
+              <i data-lucide="image-plus"></i>
+              <strong>Filtros</strong>
+              <span>Local e máquina</span>
+            </div>
+          </figure>
+          <figure class="dashboard-mosaic-item glass-panel">
+            <div class="dashboard-photo-placeholder">
+              <i data-lucide="image-plus"></i>
+              <strong>Equipamento</strong>
+              <span>Detalhes e identificação</span>
+            </div>
+          </figure>
+          <figure class="dashboard-mosaic-item glass-panel">
+            <div class="dashboard-photo-placeholder">
+              <i data-lucide="image-plus"></i>
+              <strong>Indicadores</strong>
+              <span>Última, atual e próxima revisão</span>
+            </div>
+          </figure>
+          <figure class="dashboard-mosaic-item glass-panel">
+            <div class="dashboard-photo-placeholder">
+              <i data-lucide="image-plus"></i>
+              <strong>Página Custo</strong>
+              <span>Análise complementar</span>
+            </div>
+          </figure>
         </div>
       </section>
 
-      <section class="case-section">
-        <div class="section-intro"><p class="section-index">04 · ESTRUTURA</p><h2>Duas páginas, um mesmo contexto.</h2></div>
-        <div class="section-body">
-          <div class="page-map">
-            <article class="page-panel">
-              <span class="panel-number">PÁGINA 01</span><h3>Preventivas</h3><p>Tela principal de programação e controle, organizada ao redor do equipamento.</p>
-              <ul><li>Filtros de local e máquina</li><li>Tabela operacional central</li><li>Última, atual e próxima revisão</li><li>Navegação para análise de custo</li></ul>
-            </article>
-            <article class="page-panel">
-              <span class="panel-number">PÁGINA 02</span><h3>Custo</h3><p>Visão complementar que reutiliza o contexto de local e máquina.</p>
-              <ul><li>Filtros sincronizados por entidade</li><li>Tabela de análise complementar</li><li>Base para evolução financeira</li><li>Navegação entre páginas</li></ul>
-            </article>
-          </div>
+      <section class="content-section reveal">
+        <h2><i data-lucide="sparkles"></i> Apresentação do projeto</h2>
+        <div class="info-grid">
+          <article class="info-card glass-panel">
+            <h3><i data-lucide="target"></i> Objetivo</h3>
+            <p>Centralizar as informações necessárias para programar e controlar manutenções preventivas por equipamento.</p>
+          </article>
+          <article class="info-card glass-panel">
+            <h3><i data-lucide="puzzle"></i> Desafio</h3>
+            <p>Conectar cadastro, histórico de revisão, leitura atual de horímetro e previsão da próxima intervenção em uma leitura simples.</p>
+          </article>
+          <article class="info-card glass-panel">
+            <h3><i data-lucide="lightbulb"></i> Solução</h3>
+            <p>Um relatório operacional com filtros por local e máquina, medidas DAX centralizadas e destaque para as horas restantes.</p>
+          </article>
         </div>
       </section>
 
-      <section class="case-section">
-        <div class="section-intro"><p class="section-index">05 · MODELO DE DADOS</p><h2>A máquina como centro da análise.</h2></div>
-        <div class="section-body">
-          <p>A dimensão <strong>dMaquinas</strong> organiza os dados cadastrais e filtros. A tabela <strong>_Medidas</strong> concentra a camada analítica do relatório.</p>
-          <table class="data-table">
-            <thead><tr><th>Campo</th><th>Papel no dashboard</th></tr></thead>
+      <section class="content-section reveal">
+        <h2><i data-lucide="bar-chart-3"></i> Visão técnica</h2>
+        <div class="project-metrics">
+          <article class="project-metric glass-panel"><strong>02</strong><span>páginas de análise</span></article>
+          <article class="project-metric glass-panel"><strong>20</strong><span>visuais mapeados</span></article>
+          <article class="project-metric glass-panel"><strong>10</strong><span>medidas DAX</span></article>
+          <article class="project-metric glass-panel"><strong>16:9</strong><span>layout 1280 × 720</span></article>
+        </div>
+      </section>
+
+      <section class="content-section reveal">
+        <h2><i data-lucide="route"></i> Fluxo de decisão</h2>
+        <div class="feature-list">
+          <div class="feature-item"><i data-lucide="map-pin"></i><span>Selecionar o local e a máquina que serão analisados.</span></div>
+          <div class="feature-item"><i data-lucide="history"></i><span>Consultar a última revisão, data, horímetro e ordem de serviço.</span></div>
+          <div class="feature-item"><i data-lucide="gauge"></i><span>Conferir a leitura atual e a data de atualização do horímetro.</span></div>
+          <div class="feature-item"><i data-lucide="calendar-clock"></i><span>Identificar a próxima preventiva e as horas restantes até o marco.</span></div>
+        </div>
+      </section>
+
+      <section class="content-section reveal">
+        <h2><i data-lucide="layout-dashboard"></i> Estrutura do relatório</h2>
+        <div class="info-grid project-page-grid">
+          <article class="info-card glass-panel">
+            <h3><i data-lucide="wrench"></i> Página Preventivas</h3>
+            <p>Tela principal de programação e controle com filtros, identificação do equipamento e tabela operacional.</p>
+            <ul class="project-list">
+              <li>Filtros de local e máquina</li>
+              <li>Última revisão realizada</li>
+              <li>Leitura atual de horímetro</li>
+              <li>Próxima preventiva prevista</li>
+            </ul>
+          </article>
+          <article class="info-card glass-panel">
+            <h3><i data-lucide="circle-dollar-sign"></i> Página Custo</h3>
+            <p>Visão complementar que reutiliza o contexto de local e máquina para aprofundar a análise financeira.</p>
+            <ul class="project-list">
+              <li>Filtros sincronizados</li>
+              <li>Tabela complementar</li>
+              <li>Análise por equipamento</li>
+              <li>Base para evolução de custos</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="content-section reveal">
+        <h2><i data-lucide="database"></i> Modelo de dados</h2>
+        <p class="section-description">
+          A dimensão <strong>dMaquinas</strong> organiza os dados cadastrais e os filtros principais. A tabela <strong>_Medidas</strong> concentra a camada analítica.
+        </p>
+        <div class="documentation-table-wrapper glass-panel">
+          <table class="documentation-table">
+            <thead>
+              <tr><th>Campo</th><th>Papel no dashboard</th></tr>
+            </thead>
             <tbody>
               <tr><td>dMaquinas.Local</td><td>Localização do equipamento e filtro principal.</td></tr>
-              <tr><td>dMaquinas.Maquina</td><td>Entidade central para seleção e análise.</td></tr>
+              <tr><td>dMaquinas.Maquina</td><td>Entidade central de seleção e análise.</td></tr>
               <tr><td>dMaquinas.Placa</td><td>Identificação operacional do equipamento.</td></tr>
               <tr><td>dMaquinas.Modelo</td><td>Categoria e característica da máquina.</td></tr>
             </tbody>
@@ -118,65 +176,60 @@
         </div>
       </section>
 
-      <section class="case-section">
-        <div class="section-intro"><p class="section-index">06 · CAMADA DAX</p><h2>Medidas orientadas à ação.</h2></div>
-        <div class="section-body">
-          <table class="data-table">
-            <thead><tr><th>Medida</th><th>Função</th></tr></thead>
-            <tbody>
-              <tr><td>Horimetro_Ultima_Preventiva</td><td>Marco registrado no último atendimento preventivo.</td></tr>
-              <tr><td>Nome_Ultima_Preventiva</td><td>Tipo da revisão executada anteriormente.</td></tr>
-              <tr><td>Data_Ultima_Preventiva</td><td>Data do evento de manutenção mais recente.</td></tr>
-              <tr><td>OS_Ultima_Preventiva</td><td>Rastreabilidade por ordem de serviço.</td></tr>
-              <tr><td>Horimetro_Atual</td><td>Leitura válida mais recente da máquina.</td></tr>
-              <tr><td>Data_Horimetro_Atual</td><td>Data associada à leitura atual.</td></tr>
-              <tr><td>Horimetro_Proxima_Preventiva</td><td>Próximo marco previsto pelo plano.</td></tr>
-              <tr><td>Nome_Proxima_Preventiva</td><td>Tipo da próxima revisão programada.</td></tr>
-              <tr><td>Horas_Faltam_Proxima</td><td>Indicador central de urgência operacional.</td></tr>
-              <tr><td>Espaco_Divisor</td><td>Medida técnica usada na organização visual.</td></tr>
-            </tbody>
-          </table>
-          <div class="formula" aria-label="Fórmula conceitual da medida Horas Faltam Próxima">Horas_Faltam_Proxima =<br>[Horimetro_Proxima_Preventiva] - [Horimetro_Atual]</div>
-          <div class="status-row">
-            <div class="status-pill ok"><strong>No prazo</strong>Resultado maior que zero.</div>
-            <div class="status-pill attention"><strong>No marco</strong>Resultado igual a zero.</div>
-            <div class="status-pill late"><strong>Vencida</strong>Resultado menor que zero.</div>
-          </div>
+      <section class="content-section reveal">
+        <h2><i data-lucide="function-square"></i> Medidas DAX documentadas</h2>
+        <div class="measure-grid">
+          <article class="measure-card glass-panel"><code>Horimetro_Ultima_Preventiva</code><p>Marco registrado no último atendimento.</p></article>
+          <article class="measure-card glass-panel"><code>Nome_Ultima_Preventiva</code><p>Tipo da revisão executada anteriormente.</p></article>
+          <article class="measure-card glass-panel"><code>Data_Ultima_Preventiva</code><p>Data do evento de manutenção mais recente.</p></article>
+          <article class="measure-card glass-panel"><code>OS_Ultima_Preventiva</code><p>Rastreabilidade por ordem de serviço.</p></article>
+          <article class="measure-card glass-panel"><code>Horimetro_Atual</code><p>Leitura válida mais recente da máquina.</p></article>
+          <article class="measure-card glass-panel"><code>Data_Horimetro_Atual</code><p>Data associada à leitura atual.</p></article>
+          <article class="measure-card glass-panel"><code>Horimetro_Proxima_Preventiva</code><p>Próximo marco previsto pelo plano.</p></article>
+          <article class="measure-card glass-panel"><code>Nome_Proxima_Preventiva</code><p>Tipo da próxima revisão programada.</p></article>
+          <article class="measure-card glass-panel measure-card--highlight"><code>Horas_Faltam_Proxima</code><p>Indicador central de urgência operacional.</p></article>
+          <article class="measure-card glass-panel"><code>Espaco_Divisor</code><p>Medida técnica de organização visual.</p></article>
         </div>
       </section>
 
-      <section class="case-section">
-        <div class="section-intro"><p class="section-index">07 · ENTREGÁVEIS</p><h2>Projeto documentado de ponta a ponta.</h2></div>
-        <div class="section-body">
-          <div class="deliverables">
-            <article class="deliverable"><i data-lucide="layout-dashboard"></i><h3>Relatório em Power BI</h3><p>Duas páginas estruturadas para controle preventivo e análise complementar.</p></article>
-            <article class="deliverable"><i data-lucide="database"></i><h3>Modelo analítico</h3><p>Dimensão de máquinas e camada de medidas organizadas por regra de negócio.</p></article>
-            <article class="deliverable"><i data-lucide="list-checks"></i><h3>Regras documentadas</h3><p>Fluxo funcional, interpretação dos indicadores e pontos de validação.</p></article>
-            <article class="deliverable"><i data-lucide="route"></i><h3>Roadmap de evolução</h3><p>Status visual, alertas de atualização e aprofundamento da análise de custos.</p></article>
-          </div>
+      <section class="content-section reveal">
+        <h2><i data-lucide="calculator"></i> Regra principal</h2>
+        <div class="formula-panel glass-panel">
+          <code>Horas_Faltam_Proxima =<br>[Horimetro_Proxima_Preventiva] - [Horimetro_Atual]</code>
+        </div>
+        <div class="status-grid">
+          <article class="status-card status-card--ok glass-panel"><strong>No prazo</strong><span>Resultado maior que zero</span></article>
+          <article class="status-card status-card--attention glass-panel"><strong>No marco</strong><span>Resultado igual a zero</span></article>
+          <article class="status-card status-card--late glass-panel"><strong>Vencida</strong><span>Resultado menor que zero</span></article>
         </div>
       </section>
 
-      <section class="case-section">
-        <div class="section-intro"><p class="section-index">08 · PRÓXIMOS PASSOS</p><h2>Da leitura operacional à gestão preditiva.</h2></div>
-        <div class="section-body">
-          <ul class="challenge-list">
-            <li><b>01</b><span>Formalizar descrições e fórmulas completas das medidas DAX.</span></li>
-            <li><b>02</b><span>Adicionar status visuais para vencida, atenção e no prazo.</span></li>
-            <li><b>03</b><span>Criar alertas para leituras de horímetro desatualizadas.</span></li>
-            <li><b>04</b><span>Detalhar custos por máquina, local, OS e tipo de preventiva.</span></li>
-            <li><b>05</b><span>Validar regras para equipamentos sem histórico ou com troca de horímetro.</span></li>
-          </ul>
-          <aside class="case-note">Nota técnica: as fórmulas DAX completas não estavam disponíveis no pacote analisado. A descrição das medidas foi inferida a partir dos nomes, campos usados nos visuais e estrutura funcional do relatório, devendo ser validada no Power BI Desktop.</aside>
+      <section class="content-section reveal">
+        <h2><i data-lucide="list-checks"></i> Próximos passos</h2>
+        <div class="feature-list">
+          <div class="feature-item"><i data-lucide="code-2"></i><span>Formalizar as fórmulas completas e descrições das medidas DAX.</span></div>
+          <div class="feature-item"><i data-lucide="traffic-cone"></i><span>Adicionar status visuais para vencida, atenção e no prazo.</span></div>
+          <div class="feature-item"><i data-lucide="bell-ring"></i><span>Criar alertas para leituras de horímetro desatualizadas.</span></div>
+          <div class="feature-item"><i data-lucide="badge-dollar-sign"></i><span>Detalhar custos por máquina, local, OS e tipo de preventiva.</span></div>
         </div>
+        <aside class="project-note glass-panel">
+          <i data-lucide="info"></i>
+          <p>As fórmulas DAX completas não estavam disponíveis no pacote analisado. A documentação foi inferida a partir dos nomes, campos dos visuais e estrutura funcional do relatório e deve ser validada no Power BI Desktop.</p>
+        </aside>
       </section>
+    </div>
 
-      <div class="case-cta">
-        <h2>Dados de manutenção transformados em prioridade operacional.</h2>
-        <a href="index.html#contact">Falar sobre o projeto <i data-lucide="arrow-up-right"></i></a>
-      </div>
-      <footer class="case-footer"><span>Dashboard Preventivas · Power BI</span><span>Case apresentado por Carina da Silva Ribeiro</span></footer>
-    </main>
-    <script type="module" src="./src/main.ts"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) entry.target.classList.add('active');
+          });
+        }, { threshold: 0.12 });
+        reveals.forEach((item) => observer.observe(item));
+      });
+    </script>
   </body>
 </html>

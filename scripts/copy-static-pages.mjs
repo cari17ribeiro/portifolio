@@ -12,3 +12,7 @@ await Promise.all(
 
 await mkdir(join(dist, 'src'), { recursive: true });
 await copyFile(join(root, 'src', 'style.css'), join(dist, 'src', 'style.css'));
+await copyFile(
+  join(root, 'src', 'preventivas.css'),
+  join(dist, 'src', 'preventivas.css'),
+);

@@ -178,43 +178,244 @@
 
       <section class="content-section reveal">
         <h2><i data-lucide="function-square"></i> Medidas DAX documentadas</h2>
-        <div class="measure-grid">
-          <article class="measure-card glass-panel"><code>Horimetro_Ultima_Preventiva</code><p>Marco registrado no último atendimento.</p></article>
-          <article class="measure-card glass-panel"><code>Nome_Ultima_Preventiva</code><p>Tipo da revisão executada anteriormente.</p></article>
-          <article class="measure-card glass-panel"><code>Data_Ultima_Preventiva</code><p>Data do evento de manutenção mais recente.</p></article>
-          <article class="measure-card glass-panel"><code>OS_Ultima_Preventiva</code><p>Rastreabilidade por ordem de serviço.</p></article>
-          <article class="measure-card glass-panel"><code>Horimetro_Atual</code><p>Leitura válida mais recente da máquina.</p></article>
-          <article class="measure-card glass-panel"><code>Data_Horimetro_Atual</code><p>Data associada à leitura atual.</p></article>
-          <article class="measure-card glass-panel"><code>Horimetro_Proxima_Preventiva</code><p>Próximo marco previsto pelo plano.</p></article>
-          <article class="measure-card glass-panel"><code>Nome_Proxima_Preventiva</code><p>Tipo da próxima revisão programada.</p></article>
-          <article class="measure-card glass-panel measure-card--highlight"><code>Horas_Faltam_Proxima</code><p>Indicador central de urgência operacional.</p></article>
-          <article class="measure-card glass-panel"><code>Espaco_Divisor</code><p>Medida técnica de organização visual.</p></article>
+        <p class="section-description">
+          Cada medida apresenta seu papel no relatório. Toque em <strong>Ver fórmula</strong>
+          para consultar o DAX completo.
+        </p>
+        <div class="measure-accordion">
+          <details class="measure-card glass-panel">
+            <summary>
+              <span class="measure-summary"><code>Data_Horimetro_Atual</code><span>Retorna a data mais recente de abastecimento registrada no contexto selecionado.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>Data_Horimetro_Atual =
+CALCULATE(
+    MAX(TQN[Dt. Abastec.])
+)</code></pre></div>
+          </details>
+
+          <details class="measure-card glass-panel">
+            <summary>
+              <span class="measure-summary"><code>Data_Ultima_Preventiva</code><span>Identifica a data de conclusão da preventiva mais recente.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>Data_Ultima_Preventiva =
+CALCULATE(
+    MAX(STJ[Real. Fim])
+)</code></pre></div>
+          </details>
+
+          <details class="measure-card glass-panel measure-card--highlight">
+            <summary>
+              <span class="measure-summary"><code>Horas_Faltam_Proxima</code><span>Calcula quantas horas faltam para a próxima preventiva e alimenta o alerta por cores.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>Horas_Faltam_Proxima =
+VAR _Proxima = [Horimetro_Proxima_Preventiva]
+VAR _Atual = [Horimetro_Atual]
+
+RETURN
+IF(
+    ISBLANK(_Proxima) || ISBLANK(_Atual),
+    BLANK(),
+    _Proxima - _Atual
+)</code></pre></div>
+          </details>
+
+          <details class="measure-card glass-panel">
+            <summary>
+              <span class="measure-summary"><code>Horimetro_Atual</code><span>Obtém a leitura mais recente do contador de horas da máquina.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>Horimetro_Atual =
+CALCULATE(
+    MAX(TQN[Contador 1]),
+    LASTDATE(TQN[Dt. Abastec.])
+)</code></pre></div>
+          </details>
+
+          <details class="measure-card glass-panel">
+            <summary>
+              <span class="measure-summary"><code>Horimetro_Proxima_Preventiva</code><span>Soma ao último horímetro o primeiro intervalo previsto no plano de manutenção.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>Horimetro_Proxima_Preventiva =
+VAR _HorimetroUltima = [Horimetro_Ultima_Preventiva]
+
+-- Pega o intervalo do 1º passo da máquina (ex.: 500 h)
+VAR _Intervalo =
+    CALCULATE(MIN(dPlanos[HorasAcumuladasNoCiclo]))
+
+RETURN
+    IF(
+        ISBLANK(_HorimetroUltima),
+        BLANK(),
+        _HorimetroUltima + _Intervalo
+    )</code></pre></div>
+          </details>
+
+          <details class="measure-card glass-panel">
+            <summary>
+              <span class="measure-summary"><code>Horimetro_Ultima_Preventiva</code><span>Recupera o maior horímetro registrado até a data da última preventiva da máquina.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>Horimetro_Ultima_Preventiva =
+VAR _DataPreventiva = [Data_Ultima_Preventiva]
+VAR _MaquinaAtual = SELECTEDVALUE(dMaquinas[Maquina])
+VAR _MaiorHorimetroNaData =
+    CALCULATE(
+        MAX(TQN[Contador 1]),
+        FILTER(
+            ALL(TQN),
+            TQN[Maquina] = _MaquinaAtual &amp;&amp;
+            TQN[Dt. Abastec.] &lt;= _DataPreventiva
+        )
+    )
+
+RETURN
+    _MaiorHorimetroNaData</code></pre></div>
+          </details>
+
+          <details class="measure-card glass-panel">
+            <summary>
+              <span class="measure-summary"><code>Nome_Proxima_Preventiva</code><span>Define a próxima revisão conforme o histórico e a sequência do ciclo preventivo.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>Nome_Proxima_Preventiva =
+VAR _MaquinaAtual = SELECTEDVALUE(dMaquinas[Maquina])
+VAR _DataUltimaOS =
+    CALCULATE(
+        MAX(STJ[Real. Fim]),
+        STJ[Maquina] = _MaquinaAtual
+    )
+VAR _UltimaSeqExecutada = [Ultima_Sequencia_Realizada]
+
+RETURN
+IF(
+    ISBLANK(_DataUltimaOS),
+    CALCULATE(
+        MAX(dPlanos[NomePreventiva]),
+        dPlanos[PassoCiclo] = 1
+    ),
+    IF(
+        _UltimaSeqExecutada = 4,
+        CALCULATE(
+            MAX(dPlanos[NomePreventiva]),
+            dPlanos[PassoCiclo] = 1
+        ),
+        VAR _DataUltimo4 =
+            CALCULATE(
+                MAX(STJ[Real. Fim]),
+                FILTER(
+                    ALL(STJ),
+                    STJ[Maquina] = _MaquinaAtual &amp;&amp;
+                    STJ[Sequência] = 4 &amp;&amp;
+                    STJ[Real. Fim] &lt;= _DataUltimaOS
+                )
+            )
+        VAR _Qtd2Feitas =
+            CALCULATE(
+                COUNTROWS(STJ),
+                FILTER(
+                    ALL(STJ),
+                    STJ[Maquina] = _MaquinaAtual &amp;&amp;
+                    STJ[Sequência] = 2 &amp;&amp;
+                    STJ[Real. Fim] &gt; _DataUltimo4 &amp;&amp;
+                    STJ[Real. Fim] &lt;= _DataUltimaOS
+                )
+            )
+        VAR _ProximoPasso =
+            IF(_Qtd2Feitas &gt;= 3, 4, _Qtd2Feitas + 1)
+        RETURN
+            CALCULATE(
+                MAX(dPlanos[NomePreventiva]),
+                dPlanos[PassoCiclo] = _ProximoPasso,
+                ALL(dPlanos)
+            )
+    )
+)</code></pre></div>
+          </details>
+
+          <details class="measure-card glass-panel">
+            <summary>
+              <span class="measure-summary"><code>Nome_Ultima_Preventiva</code><span>Traduz a última sequência executada para o nome da preventiva correspondente.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>Nome_Ultima_Preventiva =
+VAR _UltimaSeq = [Ultima_Sequencia_Realizada]
+
+RETURN
+IF(
+    ISBLANK(_UltimaSeq),
+    "Sem Histórico",
+    CALCULATE(
+        MAX(dPlanos[NomePreventiva]),
+        dPlanos[PassoCiclo] = _UltimaSeq,
+        ALL(dPlanos)
+    )
+)</code></pre></div>
+          </details>
+
+          <details class="measure-card glass-panel">
+            <summary>
+              <span class="measure-summary"><code>OS_Ultima_Preventiva</code><span>Retorna a ordem de serviço vinculada à última preventiva.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>OS_Ultima_Preventiva =
+VAR _DataUltimaOS = [Data_Ultima_Preventiva]
+
+RETURN
+CALCULATE(
+    MAX(STJ[Ordem Serv.]),
+    STJ[Real. Fim] = _DataUltimaOS
+)</code></pre></div>
+          </details>
+
+          <details class="measure-card glass-panel">
+            <summary>
+              <span class="measure-summary"><code>Ultima_Sequencia_Realizada</code><span>Identifica a sequência de manutenção executada na última ordem de serviço.</span></span>
+              <span class="measure-toggle">Ver fórmula <i data-lucide="chevron-down"></i></span>
+            </summary>
+            <div class="measure-formula"><pre><code>Ultima_Sequencia_Realizada =
+VAR _DataUltimaOS = [Data_Ultima_Preventiva]
+
+RETURN
+CALCULATE(
+    MAX(STJ[Sequência]),
+    STJ[Real. Fim] = _DataUltimaOS
+)</code></pre></div>
+          </details>
         </div>
       </section>
 
       <section class="content-section reveal">
-        <h2><i data-lucide="calculator"></i> Regra principal</h2>
-        <div class="formula-panel glass-panel">
-          <code>Horas_Faltam_Proxima =<br>[Horimetro_Proxima_Preventiva] - [Horimetro_Atual]</code>
-        </div>
+        <h2><i data-lucide="traffic-cone"></i> Alerta visual de vencimento</h2>
+        <p class="section-description">
+          O valor de <strong>Horas_Faltam_Proxima</strong> recebe formatação
+          condicional no Power BI. A cor permite reconhecer a prioridade sem
+          precisar interpretar cada número individualmente.
+        </p>
         <div class="status-grid">
-          <article class="status-card status-card--ok glass-panel"><strong>No prazo</strong><span>Resultado maior que zero</span></article>
-          <article class="status-card status-card--attention glass-panel"><strong>No marco</strong><span>Resultado igual a zero</span></article>
-          <article class="status-card status-card--late glass-panel"><strong>Vencida</strong><span>Resultado menor que zero</span></article>
+          <article class="status-card status-card--ok glass-panel"><span class="status-swatch"></span><strong>Verde · Está ok</strong><span>O equipamento ainda está dentro do prazo planejado.</span></article>
+          <article class="status-card status-card--attention glass-panel"><span class="status-swatch"></span><strong>Amarelo · Atenção</strong><span>O vencimento está se aproximando e a preventiva deve ser programada.</span></article>
+          <article class="status-card status-card--late glass-panel"><span class="status-swatch"></span><strong>Vermelho · Vencida</strong><span>O horímetro previsto já foi atingido ou ultrapassado.</span></article>
         </div>
+        <aside class="project-note glass-panel project-note--blue">
+          <i data-lucide="palette"></i>
+          <p>A faixa numérica que inicia o amarelo é configurada diretamente nas regras de formatação condicional do visual. O cálculo DAX permanece responsável apenas por retornar as horas restantes.</p>
+        </aside>
       </section>
 
       <section class="content-section reveal">
         <h2><i data-lucide="list-checks"></i> Próximos passos</h2>
         <div class="feature-list">
-          <div class="feature-item"><i data-lucide="code-2"></i><span>Formalizar as fórmulas completas e descrições das medidas DAX.</span></div>
-          <div class="feature-item"><i data-lucide="traffic-cone"></i><span>Adicionar status visuais para vencida, atenção e no prazo.</span></div>
           <div class="feature-item"><i data-lucide="bell-ring"></i><span>Criar alertas para leituras de horímetro desatualizadas.</span></div>
           <div class="feature-item"><i data-lucide="badge-dollar-sign"></i><span>Detalhar custos por máquina, local, OS e tipo de preventiva.</span></div>
+          <div class="feature-item"><i data-lucide="shield-check"></i><span>Validar exceções para máquinas sem histórico ou com troca de horímetro.</span></div>
         </div>
         <aside class="project-note glass-panel">
-          <i data-lucide="info"></i>
-          <p>As fórmulas DAX completas não estavam disponíveis no pacote analisado. A documentação foi inferida a partir dos nomes, campos dos visuais e estrutura funcional do relatório e deve ser validada no Power BI Desktop.</p>
+          <i data-lucide="file-check-2"></i>
+          <p>As dez medidas desta página foram documentadas a partir das fórmulas DAX originais do projeto, preservando nomes de tabelas, campos e regras de negócio.</p>
         </aside>
       </section>
     </div>

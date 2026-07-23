@@ -1,3 +1,5 @@
+@import './preventivas.css';
+
 /* Reset e Scroll Suave */
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
 html { scroll-behavior: smooth; }

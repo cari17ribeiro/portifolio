@@ -6,7 +6,46 @@ document.addEventListener('DOMContentLoaded', () => {
   // Inicializa os ícones
   lucide.createIcons();
 
-  // Lógica de Animação no Scroll (Reveal) repetitiva
+  const splash = document.getElementById('splash');
+  const splashText = document.getElementById('text-rotate');
+  const splashPhrases = [
+    'Analista de Dados',
+    'Engenheira Mecânica',
+    'Apaixonada por Tecnologia',
+  ];
+
+  if (splash && splashText) {
+    let phraseIndex = 0;
+    let phraseTimer: number | undefined;
+    let hideTimer: number | undefined;
+
+    const hideSplash = () => {
+      window.clearTimeout(phraseTimer);
+      window.clearTimeout(hideTimer);
+      splash.classList.add('splash-hidden');
+    };
+
+    const showNextPhrase = () => {
+      splashText.classList.remove('is-visible');
+
+      window.setTimeout(() => {
+        splashText.textContent = splashPhrases[phraseIndex];
+        splashText.classList.add('is-visible');
+        phraseIndex += 1;
+
+        if (phraseIndex < splashPhrases.length) {
+          phraseTimer = window.setTimeout(showNextPhrase, 2200);
+        } else {
+          hideTimer = window.setTimeout(hideSplash, 2200);
+        }
+      }, phraseIndex === 0 ? 0 : 300);
+    };
+
+    showNextPhrase();
+    splash.addEventListener('click', hideSplash, { once: true });
+  }
+
+  // Lógica de animação no scroll
   const reveals = document.querySelectorAll('.reveal');
 
   const revealObserver = new IntersectionObserver((entries) => {

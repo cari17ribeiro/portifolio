@@ -67,12 +67,12 @@ body {
 /* NavBar Expandida e Adaptada */
 .navbar {
   position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-  width: 92%; max-width: 850px; padding: 14px 28px; border-radius: 40px; z-index: 1000;
+  width: 94%; max-width: 1050px; padding: 14px 28px; border-radius: 40px; z-index: 1000;
 }
 .nav-content { display: flex; justify-content: space-between; align-items: center; }
 .logo { font-weight: 800; color: var(--blue-light); font-size: 1.3rem; letter-spacing: 0.5px; }
-.nav-links { display: flex; gap: 22px; list-style: none; }
-.nav-links a { color: var(--text-main); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.3s; }
+.nav-links { display: flex; gap: 16px; list-style: none; }
+.nav-links a { color: var(--text-main); text-decoration: none; font-size: 0.84rem; font-weight: 500; transition: color 0.3s; }
 .nav-links a:hover { color: var(--blue-light); }
 
 /* =========================================
@@ -176,6 +176,18 @@ section:hover {
   z-index: 1;
 }
 
+.project-media--logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.8));
+}
+
+.project-media--logo img {
+  object-fit: contain;
+  padding: 24px;
+}
+
 /* =========================================
    EFEITO DO BALÃO NO HOVER
    ========================================= */
@@ -206,6 +218,31 @@ section:hover {
 .btn-contact:hover { opacity: 0.85; }
 .btn-contact.outline { background: transparent; color: var(--text-main); border: 1px solid var(--glass-border); }
 .btn-contact.outline:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.15); }
+
+.feedback-empty {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 36px;
+}
+
+.feedback-empty > svg {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  color: var(--blue-light);
+}
+
+.feedback-empty h4 {
+  color: #fff;
+  font-size: 1.15rem;
+  margin-bottom: 8px;
+}
+
+.feedback-empty p {
+  color: var(--text-muted);
+  line-height: 1.65;
+}
 
 /* Responsividade Melhorada para Desktop/Celular */
 @media (max-width: 800px) {
@@ -338,16 +375,19 @@ section:hover {
 .splash-content h1 { font-size: 3rem; margin-bottom: 10px; }
 .splash-content p { font-size: 1.5rem; color: var(--blue-light); }
 
-/* Animação do Texto */
-#text-rotate {
+/* Cada frase da abertura aparece uma única vez */
+.splash-phrase {
   display: inline-block;
-  animation: fadeChange 3s infinite;
+  min-width: 280px;
+  color: var(--blue-light);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
-@keyframes fadeChange {
-  0% { opacity: 0; transform: translateY(10px); }
-  20%, 80% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-10px); }
+.splash-phrase.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Classe para sumir */
@@ -423,8 +463,11 @@ section:hover {
   background: #0b101d;
   border-radius: 20px; /* Aumentei o raio para acompanhar a proporção */
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  padding: 16px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.3s ease;
@@ -456,9 +499,20 @@ section:hover {
 }
 
 .cert-node img {
-  width: 90%;
+  width: 78%;
+  max-height: 92px;
+  object-fit: contain;
   z-index: 1; /* Garante que a imagem fique acima da luz */
   filter: drop-shadow(0 0 5px rgba(96, 165, 250, 0.5));
+}
+
+.cert-node span {
+  position: relative;
+  z-index: 1;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  text-align: center;
 }
 
 /* Efeito Hover (Brilho intensificado) */

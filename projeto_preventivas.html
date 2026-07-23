@@ -378,15 +378,33 @@ CALCULATE(
       </section>
 
       <section class="content-section reveal">
-        <h2><i data-lucide="list-checks"></i> Próximos passos</h2>
-        <div class="feature-list">
-          <div class="feature-item"><i data-lucide="bell-ring"></i><span>Criar alertas para leituras de horímetro desatualizadas.</span></div>
-          <div class="feature-item"><i data-lucide="badge-dollar-sign"></i><span>Detalhar custos por máquina, local, OS e tipo de preventiva.</span></div>
-          <div class="feature-item"><i data-lucide="shield-check"></i><span>Validar exceções para máquinas sem histórico ou com troca de horímetro.</span></div>
+        <h2><i data-lucide="database-zap"></i> Bases e conexões de dados</h2>
+        <p class="section-description">
+          O dashboard reúne informações operacionais de diferentes sistemas.
+          No modelo do Power BI, a relação de equipamentos funciona como eixo
+          central para conectar manutenção, abastecimentos e mão de obra.
+        </p>
+        <div class="info-grid data-source-grid">
+          <article class="info-card glass-panel">
+            <h3><i data-lucide="wrench"></i> Manutenções · TOTVS</h3>
+            <p>Fornece o histórico das ordens de serviço, datas de realização, sequências executadas e preventivas concluídas por máquina.</p>
+          </article>
+          <article class="info-card glass-panel">
+            <h3><i data-lucide="fuel"></i> Abastecimentos · CTA Smart</h3>
+            <p>Disponibiliza as datas de abastecimento e as leituras do contador, usadas para identificar o horímetro atual e recuperar o horímetro da última preventiva.</p>
+          </article>
+          <article class="info-card glass-panel">
+            <h3><i data-lucide="users"></i> Mão de obra · TOTVS</h3>
+            <p>Complementa a análise com os registros de mão de obra associados aos serviços de manutenção e às respectivas ordens de serviço.</p>
+          </article>
+          <article class="info-card glass-panel">
+            <h3><i data-lucide="truck"></i> Relação de equipamentos</h3>
+            <p>Concentra o cadastro das máquinas — local, identificação, placa e modelo — e sustenta os filtros aplicados em todo o relatório.</p>
+          </article>
         </div>
-        <aside class="project-note glass-panel">
-          <i data-lucide="file-check-2"></i>
-          <p>As dez medidas desta página foram documentadas a partir das fórmulas DAX originais do projeto, preservando nomes de tabelas, campos e regras de negócio.</p>
+        <aside class="project-note glass-panel project-note--blue">
+          <i data-lucide="git-merge"></i>
+          <p>As bases são relacionadas pela identificação da máquina. A dimensão <strong>dMaquinas</strong> padroniza esse vínculo e propaga os filtros para os registros do TOTVS e do CTA Smart; datas, sequências e ordens de serviço completam o contexto necessário para calcular a última e a próxima preventiva.</p>
         </aside>
       </section>
     </div>

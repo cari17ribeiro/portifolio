@@ -48,21 +48,13 @@
   margin-bottom: 22px;
 }
 
-.dashboard-mosaic {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr 1fr;
-  grid-template-rows: repeat(2, minmax(190px, 1fr));
-  gap: 16px;
-}
-
-.dashboard-mosaic-item {
-  min-height: 190px;
+.dashboard-single {
+  width: min(100%, 1080px);
+  aspect-ratio: 16 / 9;
+  min-height: 360px;
+  margin: 0 auto;
   overflow: hidden;
-}
-
-.dashboard-mosaic-item--featured {
-  grid-row: 1 / 3;
-  min-height: 396px;
+  border-color: rgba(96, 165, 250, .18);
 }
 
 .dashboard-photo-placeholder {
@@ -84,14 +76,29 @@
 }
 
 .dashboard-photo-placeholder svg {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   color: var(--blue-light);
   margin-bottom: 8px;
 }
 
-.dashboard-photo-placeholder strong { color: #fff; }
-.dashboard-photo-placeholder span { color: var(--text-muted); font-size: .82rem; }
+.dashboard-photo-placeholder strong {
+  color: #fff;
+  font-size: 1.08rem;
+}
+
+.dashboard-photo-placeholder span {
+  color: var(--text-muted);
+  font-size: .9rem;
+}
+
+.dashboard-photo-placeholder small {
+  margin-top: 7px;
+  color: rgba(148, 163, 184, .72);
+  font-size: .72rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
 
 .project-metrics {
   display: grid;
@@ -338,33 +345,18 @@
 }
 
 @media (max-width: 900px) {
-  .dashboard-mosaic {
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: auto;
-  }
-
-  .dashboard-mosaic-item--featured {
-    grid-column: 1 / 3;
-    grid-row: auto;
-    min-height: 340px;
-  }
-
+  .dashboard-single { min-height: 300px; }
   .project-metrics { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 600px) {
-  .dashboard-mosaic,
   .project-page-grid,
   .status-grid {
     grid-template-columns: 1fr;
   }
 
-  .dashboard-mosaic-item--featured {
-    grid-column: auto;
-    min-height: 260px;
-  }
-
-  .dashboard-mosaic-item { min-height: 210px; }
+  .dashboard-single { min-height: 210px; }
+  .dashboard-photo-placeholder { padding: 18px; }
   .project-metrics { grid-template-columns: repeat(2, 1fr); }
   .project-metric { padding: 18px 12px; }
   .documentation-table-wrapper { padding: 6px 10px; }

@@ -12,7 +12,7 @@
   <div class="splash-screen" id="splash">
   <div class="splash-content">
     <h1>BEM VINDO</h1>
-    <p style="color: #fff;">Eu sou <span id="text-rotate" style="color: var(--blue-light); display: inline-block; min-width: 250px;"></span></p>
+    <p style="color: #fff;">Eu sou <span id="text-rotate" class="splash-phrase" aria-live="polite"></span></p>
   </div>
 </div>
 
@@ -26,10 +26,11 @@
         <span class="logo">CR</span>
         <ul class="nav-links">
           <li><a href="#home">Início</a></li>
+          <li><a href="#certifications">Certificações</a></li>
+          <li><a href="#frontends">Frontend</a></li>
           <li><a href="#dashboards">Dashboards</a></li>
           <li><a href="#apps">Apps</a></li>
-          <li><a href="#automations">Automações</a></li>
-          <li><a href="#presentations">Apresentações</a></li>
+          <li><a href="#feedbacks">Feedbacks</a></li>
           <li><a href="#contact">Contato</a></li>
         </ul>
       </div>
@@ -67,8 +68,52 @@
       </div>
       </section>
 
-      
-  
+      <section id="certifications" class="portfolio-section reveal">
+        <h3 class="section-title"><i data-lucide="award"></i> Certificações</h3>
+        <div class="cert-grid-compact">
+          <article class="cert-node" aria-label="Certificação Lean Six Sigma Green Belt">
+            <img src="https://www.sixsigmaonline.org/wp-content/uploads/sites/3/2021/01/SSO-Green-Belt-Badge.png" alt="Certificação Lean Six Sigma Green Belt">
+            <span>Lean Six Sigma<br>Green Belt</span>
+          </article>
+          <article class="cert-node" aria-label="Certificação profissional Udemy">
+            <img src="https://img-c.udemycdn.com/open-badges/v2/badge-class/1187084601/image8785156127069470121.png" alt="Certificação profissional Udemy">
+            <span>Formação<br>Udemy</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="frontends" class="portfolio-section reveal">
+        <h3 class="section-title"><i data-lucide="pen-tool"></i> Frontend & Design de Interfaces</h3>
+        <div class="projects-grid">
+          <div class="project-card glass-panel">
+            <div class="project-media project-media--logo">
+              <img
+                src="https://www.vereadorval.site/media/val/capa-sem-fundo.png"
+                alt="Infojornal Digital Val Advogado"
+              >
+            </div>
+            <div class="project-content">
+              <h3>Infojornal Digital | Val Advogado</h3>
+              <p>Plataforma institucional e editorial desenvolvida como infojornal digital, reunindo notícias, projetos, trajetória pública e materiais para impressão em uma experiência responsiva e acessível.</p>
+              <a href="projeto_infojornal.html" class="btn-link">Conhecer o projeto</a>
+            </div>
+          </div>
+
+          <div class="project-card glass-panel">
+            <div class="project-media project-media--logo">
+              <img
+                src="https://i.ibb.co/mrFGW2ct/e7badcf6-fb80-427e-9cba-3a3c774e43d0.png"
+                alt="Site Nollie 3D"
+              >
+            </div>
+            <div class="project-content">
+              <h3>Site Nollie 3D</h3>
+              <p>Site comercial responsivo para apresentação de serviços de modelagem e impressão 3D, catálogo de produtos e captação de orçamentos integrada ao WhatsApp.</p>
+              <a href="projeto_nollie_site.html" class="btn-link">Conhecer o projeto</a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section id="dashboards" class="portfolio-section reveal">
         <h3 class="section-title"><i data-lucide="bar-chart-2"></i> Dashboards & BI</h3>
@@ -290,19 +335,16 @@
         
       </section>
 
-      <!-- Adicione "reveal" aqui na class -->
-      <div id="certifications" class="cert-wrapper reveal">
-     
-      <div class="cert-grid-compact">
-      <div class="cert-node" data-title="Nome">
-        <img src="https://www.sixsigmaonline.org/wp-content/uploads/sites/3/2021/01/SSO-Green-Belt-Badge.png" alt="Logo">
-      </div>
-      <div class="cert-node" data-title="Nome">
-      <img src="https://img-c.udemycdn.com/open-badges/v2/badge-class/1187084601/image8785156127069470121.png" alt="Logo">
-      </div>
-      </div>
-
-    </div>
+      <section id="feedbacks" class="portfolio-section reveal">
+        <h3 class="section-title"><i data-lucide="messages-square"></i> Feedbacks</h3>
+        <div class="feedback-empty glass-panel">
+          <i data-lucide="quote"></i>
+          <div>
+            <h4>Experiências de quem trabalhou comigo</h4>
+            <p>Em breve, este espaço reunirá relatos de colegas, lideranças e clientes sobre projetos e resultados construídos em conjunto.</p>
+          </div>
+        </div>
+      </section>
 
       <section id="contact" class="portfolio-section reveal">
         <h3 class="section-title"><i data-lucide="mail"></i> Vamos conversar?</h3>
@@ -318,46 +360,6 @@
     </div>
 
     <script type="module" src="./src/main.ts"></script>
-
-    <script>
-    window.addEventListener('load', () => {
-      const splash = document.getElementById('splash');
-      const textElement = document.getElementById('text-rotate');
-      const words = ["Analista de dados", "Engenheira Mecânica", "Apaixonada por Tecnologia"];
-      let i = 0;
-      
-      // Define a primeira palavra imediatamente
-      textElement.innerText = words[i];
-  
-      // Lógica para trocar a palavra a cada 3 segundos
-      const textInterval = setInterval(() => {
-        i++;
-        if (i < words.length) {
-          textElement.innerText = words[i];
-        } else {
-          clearInterval(textInterval); 
-        }
-      }, 3000);
-  
-      // Função que esconde a tela e para as animações de fundo
-      function hideSplash() {
-        splash.classList.add('splash-hidden');
-        clearInterval(textInterval); // Para a troca de texto imediatamente
-      }
-  
-      // Cronômetro original de 9 segundos
-      const autoHideTimeout = setTimeout(() => {
-        hideSplash();
-      }, 9000);
-  
-      // O NOVO COMANDO: Se clicar na tela, esconde na hora
-      splash.addEventListener('click', () => {
-        clearTimeout(autoHideTimeout); // Cancela a espera dos 9 segundos
-        hideSplash(); // Chama a função para esconder
-      });
-    });
-  </script>
-
 
   </body>
 </html>

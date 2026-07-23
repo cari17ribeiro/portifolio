@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projeto: Site Nollie 3D | Carina da Silva Ribeiro</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </head>
+  <body>
+    <div class="bg-grid-overlay"></div>
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <nav class="navbar glass-panel" style="position: absolute;">
+      <div class="nav-content">
+        <span class="logo">CR</span>
+        <ul class="nav-links">
+          <li>
+            <a href="index.html#frontends" style="display: flex; align-items: center; gap: 6px;">
+              <i data-lucide="arrow-left" style="width: 16px; height: 16px;"></i>
+              Voltar ao Portfólio
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container" style="padding-top: 140px;">
+      <header class="project-header reveal">
+        <h1>Site Nollie 3D</h1>
+        <p>
+          Site comercial criado para apresentar serviços de modelagem e impressão
+          3D, organizar um catálogo amplo de produtos e transformar ideias dos
+          visitantes em pedidos de orçamento.
+        </p>
+        <div class="badges">
+          <span>Frontend</span>
+          <span>Catálogo Responsivo</span>
+          <span>Integração com WhatsApp</span>
+          <span>Conversão de Leads</span>
+        </div>
+      </header>
+
+      <section class="content-section reveal">
+        <h2><i data-lucide="monitor"></i> Experiência publicada</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">
+          Explore a página ao vivo, filtre os modelos disponíveis e conheça o
+          fluxo criado para solicitar peças prontas ou projetos personalizados.
+        </p>
+        <div class="demo-container glass-panel" style="padding: 0; height: 80vh; min-height: 620px;">
+          <iframe
+            src="https://nollie3d.com/"
+            title="Site Nollie 3D"
+            loading="lazy"
+            style="width: 100%; height: 100%; border: 0; background: #fff;"
+          ></iframe>
+        </div>
+      </section>
+
+      <section class="content-section reveal">
+        <h2><i data-lucide="external-link"></i> Acessar o projeto</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">
+          Abra o site em uma nova aba para navegar pelo catálogo completo.
+        </p>
+        <a href="https://nollie3d.com/" target="_blank" rel="noopener" class="btn-link">
+          Visitar o site Nollie 3D
+        </a>
+      </section>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        const reveals = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) entry.target.classList.add('active');
+          });
+        }, { threshold: 0.12 });
+        reveals.forEach((item) => observer.observe(item));
+      });
+    </script>
+  </body>
+</html>
